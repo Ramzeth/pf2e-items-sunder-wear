@@ -7,6 +7,12 @@ import {
    removeNPCWeaponPenalties,
 } from "../logic.mjs"
 import { NpcPenaltyApp } from "../apps/npc-app.mjs"
+import {
+   getBrokenThreshold,
+   getRepairLimit,
+   getWearBase,
+   getWearProfile,
+} from "../wear.mjs"
 
 export function registerItemHooks() {
    Hooks.on("preUpdateItem", (item, changes, options, userId) => {
@@ -24,7 +30,10 @@ export function registerItemHooks() {
             ) {
                if (
                   (backpackContainer.getFlag("world", "currentHp") ?? 0) <=
-                  Math.floor(backpackContainer.getFlag("world", "maxHp") / 2)
+                  getBrokenThreshold(
+                     backpackContainer,
+                     backpackContainer.getFlag("world", "maxHp"),
+                  )
                ) {
                   ui.notifications.warn(
                      game.i18n.format(
@@ -45,43 +54,63 @@ export function registerItemHooks() {
          item.type === "armor" || item.type === "weapon" || isShield
       let defaultDurabilityStats = getDefaultDurability(item)
 
-      options.aztecOldMax = isShield
-         ? (item.system.hp?.max ?? 1)
-         : item.getFlag("world", "maxHp") ||
-           (isDefaultType ? defaultDurabilityStats.maxHp : 1)
+      let wearProfile = getWearProfile(item)
 
-      options.aztecOldHp = isShield
+      /* The only thing the later updateItem hook cannot work out for itself.
+       * Everything else it needs — the base, the threshold, the new HP — is
+       * readable off the item once the write has landed, but the HP an item
+       * had *before* the write is gone for good. Transitions like "was whole,
+       * is now broken" depend on it. */
+      options.aztecHpBefore = isShield
          ? (item.system.hp?.value ?? 0)
          : (item.getFlag("world", "currentHp") ??
            (isDefaultType ? defaultDurabilityStats.maxHp : 0))
 
-      let newMaximumHitPoints = isShield
-         ? (changes.system?.hp?.max ?? options.aztecOldMax)
-         : (changes.flags?.world?.maxHp ?? options.aztecOldMax)
+      /* The ceiling current HP may reach once this update is applied: the
+       * repair limit inside the wear system, plain max HP outside it. Local
+       * to this hook — nothing downstream needs it. */
+      let incomingFlags = changes.flags?.world ?? {}
+      let repairLimitBefore =
+         getRepairLimit(item) ||
+         (isDefaultType ? defaultDurabilityStats.maxHp : 1)
+      let repairLimit
+      if (isShield) {
+         repairLimit = changes.system?.hp?.max ?? repairLimitBefore
+      } else if (!wearProfile) {
+         repairLimit = incomingFlags.maxHp ?? repairLimitBefore
+      } else if (incomingFlags["-=repairLimit"] !== undefined) {
+         // The limit is being cleared: a town repair, or a remake after a
+         // material change. Either way the item is back at its base.
+         repairLimit = incomingFlags.maxHp ?? getWearBase(item)
+      } else {
+         // Inside the system only an incoming repair limit moves the ceiling.
+         // Editing the base leaves a tired item tired.
+         repairLimit = incomingFlags.repairLimit ?? repairLimitBefore
+      }
 
       let newCurrentHitPoints = isShield
-         ? (changes.system?.hp?.value ?? options.aztecOldHp)
-         : (changes.flags?.world?.currentHp ?? options.aztecOldHp)
+         ? (changes.system?.hp?.value ?? options.aztecHpBefore)
+         : (changes.flags?.world?.currentHp ?? options.aztecHpBefore)
 
-      if (newCurrentHitPoints > newMaximumHitPoints) {
-         newCurrentHitPoints = newMaximumHitPoints
+      if (newCurrentHitPoints > repairLimit) {
+         newCurrentHitPoints = repairLimit
          if (isShield) {
             changes.system = changes.system || {}
             changes.system.hp = changes.system.hp || {}
-            changes.system.hp.value = newMaximumHitPoints
+            changes.system.hp.value = repairLimit
          } else {
             changes.flags = changes.flags || {}
             changes.flags.world = changes.flags.world || {}
-            changes.flags.world.currentHp = newMaximumHitPoints
+            changes.flags.world.currentHp = repairLimit
          }
       }
 
-      let brokenThreshold = isShield
-         ? (item.system.hp?.brokenThreshold ??
-           Math.floor(newMaximumHitPoints / 2))
-         : Math.floor(newMaximumHitPoints / 2)
-      let isBroken =
-         newMaximumHitPoints > 0 && newCurrentHitPoints <= brokenThreshold
+      /* The base may be changing in this very update, and it has not been
+       * written yet — hence the explicit second argument here and nowhere
+       * else. Outside the system the ceiling and the base are the same
+       * number, so passing the ceiling is passing the base. */
+      let brokenThreshold = getBrokenThreshold(item, repairLimit)
+      let isBroken = repairLimit > 0 && newCurrentHitPoints <= brokenThreshold
 
       if (
          newCurrentHitPoints === 0 &&
@@ -105,7 +134,7 @@ export function registerItemHooks() {
                delete changes.system.equipped
             }
          }
-         if (options.aztecOldHp > 0) {
+         if (options.aztecHpBefore > 0) {
             changes.system = changes.system || {}
             changes.system.equipped = changes.system.equipped || {}
             Object.assign(changes.system.equipped, {
@@ -316,12 +345,10 @@ export function registerItemHooks() {
          changes.system = changes.system || {}
          changes.system.runes = desiredRunes
       } else if (
-         options.aztecOldMax > 0 &&
-         options.aztecOldHp <=
-            (isShield
-               ? (item.system.hp?.brokenThreshold ??
-                 Math.floor(options.aztecOldMax / 2))
-               : Math.floor(options.aztecOldMax / 2)) &&
+         // Was broken, is not any more: the runes come back. This sits inside
+         // preUpdateItem, where the item still holds its old data, so the
+         // "before" side is simply read off it.
+         options.aztecHpBefore <= getBrokenThreshold(item) &&
          !isBroken &&
          runesBackup
       ) {
@@ -339,9 +366,8 @@ export function registerItemHooks() {
       if (
          item.type === "backpack" &&
          item.actor &&
-         options.aztecOldHp > 0 &&
-         (changes.flags?.world?.currentHp ??
-            item.getFlag("world", "currentHp")) <= 0
+         options.aztecHpBefore > 0 &&
+         item.getFlag("world", "currentHp") <= 0
       ) {
          const backpackContents = item.actor.items.filter(
             (i) => i.system.containerId === item.id,
@@ -366,49 +392,49 @@ export function registerItemHooks() {
          expandedChanges.system?.baseItem !== undefined ||
          expandedChanges.flags?.world?.assignedMaterial !== undefined
       ) {
+         /* Changing an item's material means the item has been remade, so it
+          * comes back as a new object: a fresh base, full hit points and no
+          * repair history — the limit flag is cleared rather than set, which
+          * is the same thing as "at the base".
+          *
+          * Current HP used to be carried over proportionally, a blade at half
+          * HP staying at half after the change. That made sense while max HP
+          * was only a material lookup, but there is nothing to carry over
+          * from an item that no longer exists.
+          *
+          * A base supplied in the very same update wins over the material
+          * table: that is a caller stating the new base explicitly. */
          let defaultDurabilityStats = getDefaultDurability(item)
-         let oldMaximumHp = options.aztecOldMax || 1
-         let newCurrentHp = Math.max(
-            0,
-            Math.round(
-               ((item.getFlag("world", "currentHp") ??
-                  defaultDurabilityStats.maxHp) /
-                  oldMaximumHp) *
-                  defaultDurabilityStats.maxHp,
-            ),
-         )
+         let explicitBase = expandedChanges.flags?.world?.maxHp
+         let newBase =
+            explicitBase !== undefined
+               ? explicitBase
+               : defaultDurabilityStats.maxHp
+
          if (
-            item.getFlag("world", "maxHp") !== defaultDurabilityStats.maxHp ||
+            item.getFlag("world", "maxHp") !== newBase ||
+            item.getFlag("world", "repairLimit") !== undefined ||
             item.getFlag("world", "hardness") !==
                defaultDurabilityStats.hardness
          ) {
             await item.update({
-               "flags.world.maxHp": defaultDurabilityStats.maxHp,
-               "flags.world.currentHp": isNaN(newCurrentHp)
-                  ? defaultDurabilityStats.maxHp
-                  : newCurrentHp,
+               "flags.world.maxHp": newBase,
+               "flags.world.currentHp": newBase,
                "flags.world.hardness": defaultDurabilityStats.hardness,
+               "flags.world.-=repairLimit": null,
             })
          }
       }
 
       if (item.actor?.type === "npc") {
-         let isDefaultType = item.type === "armor" || item.type === "weapon"
-         let defaultDurabilityStats = getDefaultDurability(item)
-         let oldMaximumHp =
-            options.aztecOldMax ??
-            (isDefaultType ? defaultDurabilityStats.maxHp : 1)
-         let oldCurrentHp =
-            options.aztecOldHp ??
-            (isDefaultType ? defaultDurabilityStats.maxHp : 0)
-         let newMaximumHp =
-            changes.flags?.world?.maxHp ??
-            item.getFlag("world", "maxHp") ??
-            oldMaximumHp
-         let newCurrentHp =
-            changes.flags?.world?.currentHp ??
-            item.getFlag("world", "currentHp") ??
-            oldCurrentHp
+         let hpBefore = options.aztecHpBefore ?? 0
+         let hpNow = item.getFlag("world", "currentHp") ?? 0
+
+         /* One threshold, not two. It is a fixed share of the base and cannot
+          * move inside a single update, so comparing the before and after HP
+          * against the same number is both simpler and more honest than
+          * deriving a separate threshold for each side. */
+         let brokenThreshold = getBrokenThreshold(item)
 
          const processNPCChoices = async (npcChoices) => {
             if (!npcChoices) return
@@ -422,22 +448,15 @@ export function registerItemHooks() {
             }
          }
 
-         if (
-            oldMaximumHp > 0 &&
-            oldCurrentHp > 0 &&
-            newMaximumHp > 0 &&
-            newCurrentHp <= 0
-         ) {
+         if (hpBefore > 0 && hpNow <= 0) {
             new NpcPenaltyApp({
                item,
                isDestroyed: true,
                resolve: processNPCChoices,
             }).render(true)
          } else if (
-            oldMaximumHp > 0 &&
-            oldCurrentHp > Math.floor(oldMaximumHp / 2) &&
-            newMaximumHp > 0 &&
-            newCurrentHp <= Math.floor(newMaximumHp / 2)
+            hpBefore > brokenThreshold &&
+            hpNow <= brokenThreshold
          ) {
             new NpcPenaltyApp({
                item,
@@ -445,9 +464,8 @@ export function registerItemHooks() {
                resolve: processNPCChoices,
             }).render(true)
          } else if (
-            oldMaximumHp > 0 &&
-            oldCurrentHp <= Math.floor(oldMaximumHp / 2) &&
-            newCurrentHp > Math.floor(newMaximumHp / 2)
+            hpBefore <= brokenThreshold &&
+            hpNow > brokenThreshold
          ) {
             if (item.type === "armor") await removeNPCArmorPenalties(item)
             if (item.type === "weapon") await removeNPCWeaponPenalties(item)

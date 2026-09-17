@@ -3,8 +3,12 @@
     <div style="display: flex; align-items: center; justify-content: space-between;">
         <span style="display: flex; align-items: center; gap: 5px;">
             <label style="font-weight: bold;">{{localize "pf2e-aztecs-sundered.sheet-text.hp"}}:</label>
-            <input type="number" id="dur-curr-hp" value="{{currentHp}}" style="width: 50px; text-align: center;"> / 
-            <input type="number" id="dur-max-hp" value="{{maxHp}}" style="width: 50px; text-align: center;">
+            <input type="number" id="dur-curr-hp" value="{{currentHp}}" style="width: 50px; text-align: center;"> /
+            {{#if showBase}}
+            <input type="number" id="dur-repair-limit" value="{{repairLimit}}" style="width: 50px; text-align: center;" data-tooltip="{{localize "pf2e-aztecs-sundered.dialog.durability.repair-limit-hint"}}">
+            {{else}}
+            <input type="number" id="dur-base" value="{{base}}" style="width: 50px; text-align: center;">
+            {{/if}}
         </span>
         {{#if isTracked}}
 <span style="display: flex; gap: 10px;">
@@ -19,6 +23,15 @@ font-weight: bold; color: #5bc0de;">
         {{/if}}
     </div>
     
+    {{#if showBase}}
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="display: flex; align-items: center; gap: 5px;">
+            <label style="font-weight: bold;" data-tooltip="{{localize "pf2e-aztecs-sundered.dialog.durability.base-hint"}}">{{localize "pf2e-aztecs-sundered.dialog.durability.base"}}:</label>
+            <input type="number" id="dur-base" value="{{base}}" style="width: 50px; text-align: center;">
+        </span>
+    </div>
+    {{/if}}
+
     <div style="display: flex; align-items: center; justify-content: space-between;">
         <span style="display: flex; align-items: center; gap: 5px;">
             <label style="font-weight: bold;">{{localize "pf2e-aztecs-sundered.sheet-text.hardness"}}:</label>

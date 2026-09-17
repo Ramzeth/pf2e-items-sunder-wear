@@ -1,5 +1,7 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api
 import { dmgIcons, physicalTypes } from "../constants.mjs"
+import { getDefaultDurability } from "../logic.mjs"
+import { getRepairLimit } from "../wear.mjs"
 
 export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    constructor(options = {}) {
@@ -19,19 +21,23 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
          .filter((i) => physicalTypes.includes(i.type))
          .map((i) => {
             const isShield = i.type === "shield"
+            // Untracked items fall back to what their material says, not to a
+            // flat 10/5 that disagrees with every other window.
+            const materialDefaults = getDefaultDurability(i)
             return {
                id: i.id,
                name: i.name,
                img: i.img,
                currentHp: isShield
                   ? (i.system.hp?.value ?? 0)
-                  : (i.getFlag("world", "currentHp") ?? 10),
-               maximumHp: isShield
-                  ? (i.system.hp?.max ?? 0)
-                  : (i.getFlag("world", "maxHp") ?? 10),
+                  : (i.getFlag("world", "currentHp") ?? materialDefaults.maxHp),
+               // The denominator players see is the repair limit: how far this
+               // item can currently be brought back, not what it once was.
+               repairLimit: getRepairLimit(i) ?? materialDefaults.maxHp,
                hardness: isShield
                   ? (i.system.hardness ?? 0)
-                  : (i.getFlag("world", "hardness") ?? 5),
+                  : (i.getFlag("world", "hardness") ??
+                    materialDefaults.hardness),
                type: i.type,
                itemRef: i,
             }
@@ -405,7 +411,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (effHdElement) effHdElement.textContent = effectiveHardness
       if (netDmgElement) netDmgElement.textContent = finalDmgToHp
       if (remHpElement)
-         remHpElement.textContent = `${remainingHp} / ${targetItemData.maximumHp}`
+         remHpElement.textContent = `${remainingHp} / ${targetItemData.repairLimit}`
    }
 
    static async _onAddDamage(event, target) {
@@ -539,7 +545,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
             itemName: itemRef.name,
             damage: finalDmgToHp,
             currentHp: newHp,
-            maxHp: targetItemData.maximumHp,
+            maxHp: targetItemData.repairLimit,
          },
       )
 

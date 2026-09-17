@@ -3,6 +3,8 @@ import { registerItemHooks } from "./hooks/item-hooks.mjs"
 import { registerSheetHooks } from "./hooks/sheet-hooks.mjs"
 import { registerChatHooks } from "./hooks/chat-hooks.mjs"
 import { registerCombatHooks } from "./hooks/combat-hooks.mjs"
+import { registerWearHooks } from "./hooks/wear-hooks.mjs"
+import { registerRepairHooks } from "./hooks/repair-hooks.mjs"
 import { SunderApp } from "./apps/sunder-app.mjs"
 
 Hooks.once("init", () => {
@@ -21,3 +23,5 @@ registerItemHooks()
 registerSheetHooks()
 registerChatHooks()
 registerCombatHooks()
+registerWearHooks()
+registerRepairHooks()

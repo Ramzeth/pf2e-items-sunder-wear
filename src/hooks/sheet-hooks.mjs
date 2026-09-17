@@ -1,5 +1,10 @@
 import { physicalTypes } from "../constants.mjs"
 import { getDefaultDurability } from "../logic.mjs"
+import {
+   getBrokenThreshold,
+   getRepairLimit,
+   getWearBase,
+} from "../wear.mjs"
 
 export function registerSheetHooks() {
    Hooks.on("renderItemSheet", (app, htmlElement) => {
@@ -125,24 +130,31 @@ export function registerSheetHooks() {
                  (isDefaultType && !hasDurabilityFlags
                     ? defaultDurabilityStats.maxHp
                     : 0))
-            let maximumHitPoints = isShield
-               ? (item.system.hp?.max ?? 0)
-               : (item.getFlag("world", "maxHp") ??
-                 (isDefaultType && !hasDurabilityFlags
-                    ? defaultDurabilityStats.maxHp
-                    : 0))
+            /* The denominator here is the repair limit, not the base. Showing
+             * the base would tell a player their tired sword still goes back
+             * to 20 when repair in fact stops at 15, and the only place they
+             * would ever notice is the moment repair refuses to continue. */
+            let repairLimit =
+               getRepairLimit(item) ??
+               (isDefaultType && !hasDurabilityFlags
+                  ? defaultDurabilityStats.maxHp
+                  : 0)
+            let base = getWearBase(item) ?? repairLimit
             let itemHardness = isShield
                ? (item.system.hardness ?? 0)
                : (item.getFlag("world", "hardness") ??
                  (isDefaultType && !hasDurabilityFlags
                     ? defaultDurabilityStats.hardness
                     : 0))
-            let brokenThreshold = isShield
-               ? (item.system.hp?.brokenThreshold ??
-                 Math.floor(maximumHitPoints / 2))
-               : Math.floor(maximumHitPoints / 2)
+            let brokenThreshold = getBrokenThreshold(item)
 
-            let tooltip = `${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.open-durability-config")}<br>${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.hp")}: ${currentHitPoints} / ${maximumHitPoints}<br>${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.hardness")}: ${itemHardness}`
+            // The base only earns a line once it has drifted away from the
+            // repair limit — that gap IS the accumulated fatigue.
+            let baseNote =
+               base > repairLimit
+                  ? ` (${game.i18n.localize("pf2e-aztecs-sundered.dialog.durability.base")}: ${base})`
+                  : ""
+            let tooltip = `${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.open-durability-config")}<br>${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.hp")}: ${currentHitPoints} / ${repairLimit}${baseNote}<br>${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.hardness")}: ${itemHardness}`
 
             let iconHtml = `<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px;">
                 <a class="aztec-action-btn" data-aztec-action="durability" data-item-id="${item.id}" data-tooltip="${tooltip.replace(/"/g, "&quot;")}"><i class="fa-solid fa-helmet-battle"></i></a>`
@@ -156,7 +168,7 @@ export function registerSheetHooks() {
             iconHtml += `</span>`
             nameElement.append(iconHtml)
 
-            if (maximumHitPoints > 0) {
+            if (repairLimit > 0) {
                if (currentHitPoints <= 0) {
                   nameElement.prepend(
                      `<i class="fa-solid fa-skull" style="color: #555;" data-tooltip="${game.i18n.localize("pf2e-aztecs-sundered.status.destroyed")}"></i>`,

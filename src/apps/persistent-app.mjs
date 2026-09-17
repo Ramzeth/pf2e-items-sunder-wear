@@ -1,4 +1,6 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api
+import { getDefaultDurability } from "../logic.mjs"
+import { getRepairLimit } from "../wear.mjs"
 
 export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
    ApplicationV2,
@@ -70,15 +72,21 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
       }
 
       this.isShield = this.targetItem.type === "shield"
-      this.maxHp = this.isShield
-         ? (this.targetItem.system.hp?.max ?? 0)
-         : (this.targetItem.getFlag("world", "maxHp") ?? 10)
+
+      // Untracked items take their numbers from their material, matching every
+      // other window rather than a flat 10/5 of their own.
+      const materialDefaults = getDefaultDurability(this.targetItem)
+
+      this.repairLimit =
+         getRepairLimit(this.targetItem) ?? materialDefaults.maxHp
       this.currentHp = this.isShield
          ? (this.targetItem.system.hp?.value ?? 0)
-         : (this.targetItem.getFlag("world", "currentHp") ?? 10)
+         : (this.targetItem.getFlag("world", "currentHp") ??
+           materialDefaults.maxHp)
       this.baseHd = this.isShield
          ? (this.targetItem.system.hardness ?? 0)
-         : (this.targetItem.getFlag("world", "hardness") ?? 5)
+         : (this.targetItem.getFlag("world", "hardness") ??
+           materialDefaults.hardness)
 
       this.cleanFormula =
          String(this.itemFlags.formula || "1d6")
@@ -104,7 +112,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
          baseHd: this.baseHd,
          initialNetDmg: initialNetDmg,
          initialNewHp: Math.max(0, this.currentHp - initialNetDmg),
-         maxHp: this.maxHp,
+         repairLimit: this.repairLimit,
       }
    }
 
@@ -127,7 +135,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
             el.querySelector("#pers-net-dmg").textContent = netDmg
          if (el.querySelector("#pers-rem-hp"))
             el.querySelector("#pers-rem-hp").textContent =
-               `${Math.max(0, this.currentHp - netDmg)} / ${this.maxHp}`
+               `${Math.max(0, this.currentHp - netDmg)} / ${this.repairLimit}`
       }
 
       el.querySelectorAll("input").forEach((input) => {
@@ -159,7 +167,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
             damage: netDmg,
             type: this.itemFlags.type,
             currentHp: newHp,
-            maxHp: this.maxHp,
+            maxHp: this.repairLimit,
          },
       )
 

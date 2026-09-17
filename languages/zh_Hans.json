@@ -77,6 +77,46 @@
                 "name": "允许玩家在聊天卡片使用损毁按钮",
                 "hint": "若启用，非GM玩家也会看到并能够使用聊天卡片的损毁按钮。"
             },
+            "enableWearSystem": {
+                "name": "启用装备磨损系统",
+                "hint": "家酿规则：武器在攻击骰出自然1时磨损，护甲在穿戴者被重击时磨损；每次野外维修都会永久降低物品的最大生命值上限，只有在城镇修理才能恢复。"
+            },
+            "enableWeaponWear": {
+                "name": "磨损：武器",
+                "hint": "武器在自身攻击骰出自然1时受到磨损伤害。"
+            },
+            "enableArmourWear": {
+                "name": "磨损：护甲",
+                "hint": "护甲在穿戴者被重击时受到磨损伤害。"
+            },
+            "wearFullRepair": {
+                "name": "一次检定即完全修复",
+                "hint": "一次成功的维修直接把物品恢复到其维修上限，而不是恢复固定点数的生命值。这并非RAW，但本系统的平衡取决于维修上限，而不是在营地里把同一个检定重投多少次。失败仍然什么也不恢复。"
+            },
+            "wearDamageFormula": {
+                "name": "磨损伤害",
+                "hint": "每次触发磨损时投掷，在扣除符文硬度之前。默认为1d4；使用1d6会让装备明显更快地损耗。"
+            },
+            "wearBrokenStrikeCost": {
+                "name": "使用破损武器攻击的代价",
+                "hint": "破损武器每次攻击所损失的生命值。固定数值，不投骰、也不扣除符文硬度，因此可以精确计算还剩多少次挥击。设为0则可免费使用破损武器攻击。默认为1。"
+            },
+            "wearWeaponDivisor": {
+                "name": "武器疲劳除数",
+                "hint": "武器的疲劳系数等于其基础最大生命值除以该数值。数值越大，上限下降越慢，可承受的野外维修次数越多。默认为40。"
+            },
+            "wearArmourDivisor": {
+                "name": "护甲疲劳除数",
+                "hint": "护甲的疲劳系数等于其基础最大生命值除以该数值。数值越大，上限下降越慢，可承受的野外维修次数越多。默认为80。"
+            },
+            "wearWeaponBtPercent": {
+                "name": "武器破损阈值（%）",
+                "hint": "武器判定为破损的生命值百分比（基于基础最大生命值）。数值较低，因为破损的武器完全无法使用。默认为25。"
+            },
+            "wearArmourBtPercent": {
+                "name": "护甲破损阈值（%）",
+                "hint": "护甲判定为破损的生命值百分比（基于基础最大生命值）。数值较高，因为破损的护甲仍可穿戴并保留其AC物品加值。默认为50。"
+            },
             "showDamageButtonUI": {
                 "name": "在物品栏添加伤害控制按钮",
                 "hint": "在物品栏添加锤子图标，以控制物品所受伤害。"
@@ -89,6 +129,11 @@
                 "name": "显示于物品栏界面",
                 "hint": "在主要物品栏中显示耐久度追踪信息与伤害控制。"
             }
+        },
+        "time": {
+            "minutes": "{minutes} 分钟",
+            "hours": "{hours} 小时",
+            "hours-minutes": "{hours} 小时 {minutes} 分钟"
         },
         "chat": {
             "repair": {
@@ -112,7 +157,44 @@
                 "content": "<strong>{itemName}</strong>受到{damage}点持续{type}伤害。<br>剩余生命值：{currentHp} / {maxHp}。",
                 "recovery-failure": "失败！持续伤害保留。"
             },
-            "sunder-button-label": "损毁"
+            "sunder-button-label": "损毁",
+            "repair-request": {
+                "header": "需要维修：{itemName}",
+                "difficulty": "等级 {level} · DC {dc}",
+                "state": "生命值 {currentHp} / {repairLimit}（基础值 {base}）",
+                "town-only": "野外维修已无余地——只有城镇的锻炉才能修复。",
+                "repair-button": "维修"
+            },
+            "repair-result": {
+                "header": "{actorName} 维修：{itemName}",
+                "outcome-criticalSuccess": "大成功——最多恢复 {healBudget} 点生命值，且不消耗维修上限。",
+                "outcome-success": "成功——最多恢复 {healBudget} 点生命值。",
+                "outcome-criticalSuccess-full": "大成功——将物品恢复至其维修上限，且不消耗维修上限。",
+                "outcome-success-full": "成功——将物品恢复至其维修上限。",
+                "outcome-failure": "失败——没有恢复，但维修上限依然下降。",
+                "outcome-criticalFailure": "大失败——没有恢复，维修上限照样下降，物品还额外承受一次磨损投骰。",
+                "apply-button": "应用维修"
+            },
+            "repair-applied": {
+                "header": "已维修：{itemName}",
+                "limit-lost": "维修上限：{limitBefore} → {limitAfter}（−{limitLost}）",
+                "limit-kept": "维修上限：{limitAfter} —— 未变",
+                "crit-damage": "手艺失误：物品 −{critDamage} 生命值",
+                "restored": "+{restored} 生命值：{hpBefore} → {hpAfter}",
+                "nothing": "没有恢复。生命值 {hpBefore} → {hpAfter}。",
+                "destroyed": "已损毁",
+                "time": "耗时：{duration}"
+            },
+            "wear": {
+                "roll-button": "磨损：为{itemName}投骰",
+                "flat-button": "磨损：{itemName}（−{flat}）",
+                "flavor": "磨损：{itemName}",
+                "strike-line": "以破损武器挥击：−{flat}",
+                "rune-line": "符文硬度：−{value}",
+                "hp-line": "−{applied} 生命值：{hpBefore} → {hpAfter}",
+                "broken": "已破损",
+                "destroyed": "已损毁"
+            }
         },
         "sheet-text": {
             "ignore-hardness": "无视硬度",
@@ -251,6 +333,9 @@
                 "title": "指定材料"
             },
             "durability": {
+                "base": "基础值",
+                "base-hint": "物品出厂时的原始最大生命值。野外维修会使维修上限低于该数值，在城镇修理则可将其恢复。更换材料视为重新打造，会重置基础值。",
+                "repair-limit-hint": "当前维修所能将该物品恢复到的最高生命值。每次野外维修都会略微降低它，在城镇修理则会恢复到基础值。",
                 "iwr": "免疫，弱点与抗力",
                 "immunities": "免疫",
                 "select-immunity": "-- 选择免疫 --",
@@ -308,6 +393,8 @@
                 "crafting-proficiency": "手艺熟练度",
                 "repair-dc": "修理DC",
                 "roll-crafting": "骰掷手艺",
+                "request": "请求维修",
+                "request-hint": "在聊天中公布该物品，以便其他角色用自己的手艺来修理它。",
                 "roll": "掷骰",
                 "repairing": "修理",
                 "restores-info": "（默认成功恢复{baseHeal}点HP。大成功恢复{baseHeal}点HP）"
@@ -409,6 +496,7 @@
             "persistent-ended": "{itemName}不再受到持续伤害。",
             "no-actor-repair": "未找到可执行修理动作的角色。",
             "no-crafting-skill": "该角色没有手艺技能。",
+            "no-repair-kit": "{actorName} 没有携带修理工具包。",
             "trait-assigned": "该特征已分配。"
         }
     }

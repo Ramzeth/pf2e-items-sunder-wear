@@ -81,8 +81,8 @@ export const weaponPropertyMap = {
 
 export const baseArmorMaterials = {
    paper: ["Scroll Robes"],
-   cloth: ["explorers-clothing", "padded-armor", "quilted-armor", "Gi"],
-   "wood-thin": ["Rattan Armor"],
+   cloth: ["explorers-clothing"],
+   "wood-thin": ["Rattan Armor", "padded-armor", "quilted-armor", "Gi"],
    leather: [
       "leather-armor",
       "studded-leather-armor",

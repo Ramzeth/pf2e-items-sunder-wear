@@ -1,5 +1,12 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api
 import { materialStats } from "../constants.mjs"
+import { getDefaultDurability } from "../logic.mjs"
+import {
+   getBrokenThreshold,
+   getRepairLimit,
+   getWearBase,
+   getWearProfile,
+} from "../wear.mjs"
 
 export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
    constructor(options = {}) {
@@ -44,17 +51,35 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
          this.item.getFlag("world", "maxHp") !== undefined
       const isTracked = isDefaultType || hasDurabilityFlags
 
+      /* An item nobody has edited yet carries no durability flags at all, and
+       * its real numbers come from its material. Falling back to a flat 10/5
+       * here, as this window used to, meant it showed a longsword as 10/10
+       * while the inventory row showed 20/20 — and saving that view wrote the
+       * lie into the item. */
+      const materialDefaults = getDefaultDurability(this.item)
+
       let currentHp = isShieldItem
          ? (this.item.system.hp?.value ?? 0)
-         : (this.item.getFlag("world", "currentHp") ?? 10)
-      let maxHp = isShieldItem
-         ? (this.item.system.hp?.max ?? 0)
-         : (this.item.getFlag("world", "maxHp") ?? 10)
+         : (this.item.getFlag("world", "currentHp") ?? materialDefaults.maxHp)
       let hardness = isShieldItem
          ? (this.item.system.hardness ?? 0)
-         : (this.item.getFlag("world", "hardness") ?? 5)
+         : (this.item.getFlag("world", "hardness") ?? materialDefaults.hardness)
       let assignedMaterial =
          this.item.getFlag("world", "assignedMaterial") || ""
+
+      /* The second box of the HP row is the repair limit. Outside the wear
+       * system that is the same number as the base, which is why the window
+       * looked like it had a single maximum before this system existed — and
+       * why the base gets a row of its own only when the two can differ. */
+      const wearProfile = getWearProfile(this.item)
+      const base = isShieldItem
+         ? (this.item.system.hp?.max ?? 0)
+         : getWearBase(this.item)
+      const repairLimit = getRepairLimit(this.item) ?? base
+
+      // Kept on the instance so the live preview below can recompute the
+      // threshold as the GM types, using the same percentage the rules use.
+      this.wearBtPercent = wearProfile?.btPercent ?? null
 
       let materialOptions = Object.entries(materialStats).map(
          ([keyName, values]) => ({
@@ -109,9 +134,11 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       return {
          currentHp,
-         maxHp,
+         repairLimit,
          hardness,
-         bt: Math.floor(maxHp / 2),
+         base,
+         showBase: !!wearProfile,
+         bt: getBrokenThreshold(this.item, base),
          materialOptions,
          isTracked,
          immunityOptions,
@@ -139,30 +166,41 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
 
       const currHpInput = el.querySelector("#dur-curr-hp")
-      const maxHpInput = el.querySelector("#dur-max-hp")
+      const baseInput = el.querySelector("#dur-base")
+      const repairLimitInput = el.querySelector("#dur-repair-limit")
       const hdInput = el.querySelector("#dur-hd")
       const btSpan = el.querySelector("#dur-bt")
       const matSelect = el.querySelector("#dur-mat-select")
 
-      maxHpInput?.addEventListener("input", () => {
-         let max = parseInt(maxHpInput.value) || 0
-         if (btSpan) btSpan.textContent = Math.floor(max / 2)
-      })
+      /* One formula, no branches: the threshold is a share of the base, and
+       * the share is 50% for an item the system does not govern. The repair
+       * limit does not enter into it at all. */
+      const refreshThresholdPreview = () => {
+         if (!btSpan || !baseInput) return
+
+         let base = parseInt(baseInput.value) || 0
+         let percent = this.wearBtPercent ?? 50
+         btSpan.textContent = Math.floor((base * percent) / 100)
+      }
+
+      baseInput?.addEventListener("input", refreshThresholdPreview)
 
       matSelect?.addEventListener("change", () => {
          let selectedMat = materialStats[matSelect.value]
          if (selectedMat) {
-            let oldMax = parseInt(maxHpInput?.value) || 1
-            let oldCurr = parseInt(currHpInput?.value) || 0
-            if (oldMax <= 0) oldMax = 1
+            /* Picking a material remakes the item, so everything lands on the
+             * new material's full value: base, repair limit and current HP.
+             * Current HP used to be scaled proportionally here; it no longer
+             * is, to match what the material hook does on save. The two
+             * disagreeing would mean the window showed one number and the
+             * item ended up with another. */
+            let newBase = selectedMat.hp
 
-            let newMax = selectedMat.hp
-            let newCurr = Math.round((oldCurr / oldMax) * newMax)
-
-            if (maxHpInput) maxHpInput.value = newMax
-            if (currHpInput) currHpInput.value = newCurr
+            if (baseInput) baseInput.value = newBase
+            if (repairLimitInput) repairLimitInput.value = newBase
+            if (currHpInput) currHpInput.value = newBase
             if (hdInput) hdInput.value = selectedMat.hd
-            if (btSpan) btSpan.textContent = Math.floor(newMax / 2)
+            refreshThresholdPreview()
          }
       })
 
@@ -235,9 +273,10 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const el = this.element
       const isShieldItem = this.item.type === "shield"
       let newCurrentHp = parseInt(el.querySelector("#dur-curr-hp")?.value) || 0
-      let newMaxHp = parseInt(el.querySelector("#dur-max-hp")?.value) || 0
+      let newBase = parseInt(el.querySelector("#dur-base")?.value) || 0
       let newHardness = parseInt(el.querySelector("#dur-hd")?.value) || 0
       let newMat = el.querySelector("#dur-mat-select")?.value
+      let repairLimitInput = el.querySelector("#dur-repair-limit")
 
       let immunities = []
       el.querySelectorAll(".immunity-row").forEach((row) =>
@@ -268,12 +307,28 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       if (isShieldItem) {
          updates["system.hp.value"] = newCurrentHp
-         updates["system.hp.max"] = newMaxHp
+         updates["system.hp.max"] = newBase
          updates["system.hardness"] = newHardness
       } else {
          updates["flags.world.currentHp"] = newCurrentHp
-         updates["flags.world.maxHp"] = newMaxHp
+         updates["flags.world.maxHp"] = newBase
          updates["flags.world.hardness"] = newHardness
+
+         /* The repair limit field exists only while the system governs this
+          * item. A limit at or above the base is the same thing as no limit,
+          * so it clears the flag instead of storing a duplicate of the base.
+          *
+          * Neither number is clamped against the other. A GM lowering the
+          * base below a tired item's limit is making a deliberate statement —
+          * this sword is worse than it was built to be — and the rules cope:
+          * setRepairLimit() never raises a limit, so the item erodes down to
+          * the new base and stays there. */
+         if (repairLimitInput) {
+            let newRepairLimit = parseInt(repairLimitInput.value) || 0
+            if (newRepairLimit >= newBase)
+               updates["flags.world.-=repairLimit"] = null
+            else updates["flags.world.repairLimit"] = newRepairLimit
+         }
       }
 
       if (newMat) {

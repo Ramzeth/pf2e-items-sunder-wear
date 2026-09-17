@@ -173,6 +173,9 @@
             "none": "-- None --"
          },
          "durability": {
+            "base": "Base",
+            "base-hint": "The item's pristine maximum HP, as it left the forge. Field repairs lower the repair limit below this value; a repair in town restores it. Changing the material remakes the item and resets the base.",
+            "repair-limit-hint": "The highest HP repair can currently restore this item to. Every field repair lowers it a little; a repair in town restores it to the base.",
             "iwr": "Immunities, Weaknesses & Resistances",
             "immunities": "Immunities",
             "select-immunity": "-- Select Immunity --",
@@ -245,7 +248,9 @@
             "repair-dc": "Repair DC",
             "restores-info": "(Default success restores {baseHeal} HP. Crit restores {critHeal} HP)",
             "roll": "Roll",
-            "roll-crafting": "Roll Crafting"
+            "roll-crafting": "Roll Crafting",
+            "request": "Request repair",
+            "request-hint": "Announce this item in chat so another character can repair it with their own Crafting."
          }
       },
       "sheet-text": {
@@ -284,8 +289,50 @@
          "critical-failure": "Critical failure",
          "rolled": "Rolled"
       },
+      "time": {
+         "minutes": "{minutes} min",
+         "hours": "{hours} h",
+         "hours-minutes": "{hours} h {minutes} min"
+      },
       "chat": {
          "sunder-button-label": "SUNDER",
+         "repair-request": {
+            "header": "Needs repair: {itemName}",
+            "difficulty": "Level {level} · DC {dc}",
+            "state": "HP {currentHp} / {repairLimit} (base {base})",
+            "town-only": "Beyond field repair — only a town forge can help now.",
+            "repair-button": "Repair this"
+         },
+         "repair-result": {
+            "header": "{actorName} repairs: {itemName}",
+            "outcome-criticalSuccess": "Critical success — restores up to {healBudget} HP, and costs the item nothing.",
+            "outcome-success": "Success — restores up to {healBudget} HP.",
+            "outcome-criticalSuccess-full": "Critical success — restores the item to its repair limit, and costs it nothing.",
+            "outcome-success-full": "Success — restores the item to its repair limit.",
+            "outcome-failure": "Failure — nothing restored, and the repair limit still pays.",
+            "outcome-criticalFailure": "Critical failure — nothing restored, the repair limit still pays, and the item takes a wear die on top.",
+            "apply-button": "Apply repair"
+         },
+         "repair-applied": {
+            "header": "Repaired: {itemName}",
+            "limit-lost": "Repair limit: {limitBefore} → {limitAfter} (−{limitLost})",
+            "limit-kept": "Repair limit: {limitAfter} — unchanged",
+            "crit-damage": "Botched: −{critDamage} HP to the item",
+            "restored": "+{restored} HP: {hpBefore} → {hpAfter}",
+            "nothing": "Nothing restored. HP {hpBefore} → {hpAfter}.",
+            "destroyed": "Destroyed",
+            "time": "Time spent: {duration}"
+         },
+         "wear": {
+            "roll-button": "Wear: roll for {itemName}",
+            "flat-button": "Wear: {itemName} (−{flat})",
+            "flavor": "Wear: {itemName}",
+            "strike-line": "Swung while broken: −{flat}",
+            "rune-line": "Rune hardness: −{value}",
+            "hp-line": "−{applied} HP: {hpBefore} → {hpAfter}",
+            "broken": "Broken",
+            "destroyed": "Destroyed"
+         },
          "sunder": {
             "header": "Sundered: {itemName}",
             "raw-incoming": "Damage incoming",
@@ -318,6 +365,7 @@
          "persistent-ended": "{itemName} is no longer taking persistent damage.",
          "no-actor-repair": "No actor found to perform the repair.",
          "no-crafting-skill": "This actor does not have a Crafting skill.",
+         "no-repair-kit": "{actorName} is not carrying a repairer's toolkit.",
          "applied-damage": "Applied {damage} damage to {itemName}.",
          "trait-assigned": "This trait is already assigned."
       },
@@ -337,6 +385,46 @@
          "allowPlayersSunderButton": {
             "name": "Allow players to use chat sunder",
             "hint": "If enabled, non-GM players will also see and be able to click the chat card sunder button."
+         },
+         "enableWearSystem": {
+            "name": "Enable Wear & Tear",
+            "hint": "Homebrew attrition: weapons wear down on a natural 1, armour wears down when its wearer is critically hit, and every field repair permanently lowers the item's maximum HP until it is repaired in town."
+         },
+         "enableWeaponWear": {
+            "name": "Wear & Tear: weapons",
+            "hint": "Weapons take wear damage on a natural 1 on their own attack roll."
+         },
+         "enableArmourWear": {
+            "name": "Wear & Tear: armour",
+            "hint": "Armour takes wear damage when its wearer is critically hit."
+         },
+         "wearFullRepair": {
+            "name": "One check repairs in full",
+            "hint": "A successful repair restores the item all the way to its repair limit instead of a fixed number of HP. Not RAW, but the balance of this system lives in the repair limit rather than in how many times the same check is re-rolled at camp. Failure still restores nothing."
+         },
+         "wearDamageFormula": {
+            "name": "Wear damage",
+            "hint": "Rolled each time an item wears down, before rune hardness is subtracted. Default 1d4; 1d6 wears equipment out noticeably faster."
+         },
+         "wearBrokenStrikeCost": {
+            "name": "Cost of striking with a broken weapon",
+            "hint": "HP a broken weapon loses per strike. Flat, with no die and no rune hardness, so the remaining swings can be counted exactly. Set to 0 to let broken weapons be swung for free. Default 1."
+         },
+         "wearWeaponDivisor": {
+            "name": "Weapon fatigue divisor",
+            "hint": "A weapon's fatigue multiplier is its base max HP divided by this number. Higher values mean slower erosion and more field repairs before the item is spent. Default 40."
+         },
+         "wearArmourDivisor": {
+            "name": "Armour fatigue divisor",
+            "hint": "An armour's fatigue multiplier is its base max HP divided by this number. Higher values mean slower erosion and more field repairs before the item is spent. Default 80."
+         },
+         "wearWeaponBtPercent": {
+            "name": "Weapon broken threshold (%)",
+            "hint": "Percentage of base max HP at which a weapon counts as broken. Low, because a broken weapon cannot be used at all. Default 25."
+         },
+         "wearArmourBtPercent": {
+            "name": "Armour broken threshold (%)",
+            "hint": "Percentage of base max HP at which armour counts as broken. High, because broken armour can still be worn and keeps its item bonus to AC. Default 50."
          },
          "showDamageButtonUI": {
             "name": "Show damage controls in inventory",

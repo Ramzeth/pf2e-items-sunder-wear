@@ -5,7 +5,7 @@
             <label>{{localize "pf2e-aztecs-sundered.dialog.sunder.select-item"}}</label>
             <select id="item-select" style="width: 100%;">
                 {{#each items}}
-                <option value="{{this.id}}">{{this.name}} ({{localize "pf2e-aztecs-sundered.sheet-text.hp-short"}}: {{this.currentHp}}/{{this.maximumHp}} | {{localize "pf2e-aztecs-sundered.sheet-text.hd-short"}}: {{this.hardness}})</option>
+                <option value="{{this.id}}">{{this.name}} ({{localize "pf2e-aztecs-sundered.sheet-text.hp-short"}}: {{this.currentHp}}/{{this.repairLimit}} | {{localize "pf2e-aztecs-sundered.sheet-text.hd-short"}}: {{this.hardness}})</option>
                 {{/each}}
             </select>
         </div>
@@ -105,6 +105,6 @@ width: 100%;"><i class="fa-solid fa-plus"></i> {{localize "pf2e-aztecs-sundered.
         <div>{{localize "pf2e-aztecs-sundered.dialog.sunder.damage-to-hp"}}: <strong id="net-dmg" style="color: #d9534f;">0</strong></div>
 <div id="persistent-preview-line" style="display: none;
 color: #e67e22; font-weight: bold; margin: 2px 0;">{{localize "pf2e-aztecs-sundered.dialog.sunder.pending-persistent"}} <strong id="pers-preview-val">0</strong></div>
-        <div>{{localize "pf2e-aztecs-sundered.dialog.sunder.remaining-hp"}}: <strong id="rem-hp">{{items.[0].currentHp}} / {{items.[0].maximumHp}}</strong></div>
+        <div>{{localize "pf2e-aztecs-sundered.dialog.sunder.remaining-hp"}}: <strong id="rem-hp">{{items.[0].currentHp}} / {{items.[0].repairLimit}}</strong></div>
     </div>
 </div>

@@ -12,6 +12,22 @@
       text-shadow 0.2s;
 }
 
+.aztec-wear-prompt {
+   margin-top: 6px;
+   display: flex;
+   justify-content: center;
+}
+
+.aztec-wear-roll-btn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   width: auto;
+   padding: 2px 10px;
+   line-height: 1.6;
+   border-color: var(--color-text-red, #d9534f);
+}
+
 .aztec-action-btn:hover {
    color: var(--color-text-red, #d9534f);
    text-shadow: 0 0 1px var(--color-text-red, #d9534f) !important; /* Standard PF2e red glow */

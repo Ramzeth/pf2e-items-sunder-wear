@@ -1,4 +1,7 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api
+import { getDefaultDurability } from "../logic.mjs"
+import { getRepairLimit, getWearBase, getWearProfile } from "../wear.mjs"
+import { getDegreeOfSuccess, getHealingValues } from "../repair.mjs"
 
 export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
    constructor(options = {}) {
@@ -14,6 +17,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       window: { title: "pf2e-aztecs-sundered.sheet-text.repair-item" },
       actions: {
          repair: this._onRepair,
+         requestRepair: this._onRequestRepair,
       },
    }
 
@@ -24,16 +28,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
    }
 
    _getHealingValues(rank) {
-      let healingValues = this.hasCraftersEyepiece
-         ? [10, 20, 30, 40, 50]
-         : [5, 10, 15, 20, 25]
-      let criticalHealingValues = this.hasCraftersEyepiece
-         ? [15, 30, 45, 60, 75]
-         : [10, 20, 30, 40, 50]
-      return {
-         baseHeal: healingValues[rank] || 0,
-         critHeal: criticalHealingValues[rank] || 0,
-      }
+      return getHealingValues(rank, this.hasCraftersEyepiece)
    }
 
    async _prepareContext(options) {
@@ -55,14 +50,24 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
 
       let isShieldItem = this.item.type === "shield"
+
+      /* An item nobody has edited yet has no durability flags, and its real
+       * numbers come from its material — not from a flat 10/5. */
+      this.materialDefaults = getDefaultDurability(this.item)
+
       let currentHitPoints = isShieldItem
          ? (this.item.system.hp?.value ?? 0)
-         : (this.item.getFlag("world", "currentHp") ?? 10)
-      let maximumHitPoints = isShieldItem
-         ? (this.item.system.hp?.max ?? 0)
-         : (this.item.getFlag("world", "maxHp") ?? 10)
+         : (this.item.getFlag("world", "currentHp") ??
+           this.materialDefaults.maxHp)
 
-      if (currentHitPoints >= maximumHitPoints) {
+      /* Repair tops out at the repair limit, never at the base. This is the
+       * single most important line in the file for the wear system: healing
+       * up to the base instead would cancel every point of fatigue the item
+       * has ever accumulated, and nothing would ever wear out. */
+      let repairLimit =
+         getRepairLimit(this.item) ?? this.materialDefaults.maxHp
+
+      if (currentHitPoints >= repairLimit) {
          ui.notifications.info(
             game.i18n.localize(
                "pf2e-aztecs-sundered.notifications.fully-repaired",
@@ -110,9 +115,10 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       this.itemBaseHardness = isShieldItem
          ? (this.item.system.hardness ?? 0)
-         : (this.item.getFlag("world", "hardness") ?? 5)
+         : (this.item.getFlag("world", "hardness") ??
+           this.materialDefaults.hardness)
       this.currentHitPoints = currentHitPoints
-      this.maximumHitPoints = maximumHitPoints
+      this.repairLimit = repairLimit
 
       let { baseHeal, critHeal } = this._getHealingValues(baseCraftingRank)
 
@@ -130,7 +136,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
          dc: repairDifficultyClass,
          restoresInfo: restoresInfo,
          currentHp: currentHitPoints,
-         maximumHp: maximumHitPoints,
+         repairLimit,
       }
    }
 
@@ -155,6 +161,79 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       })
    }
 
+   /**
+    * Publish the item to chat as needing repair, for somebody else to fix.
+    *
+    * The other button in this window repairs an item with its own owner's
+    * Crafting, which only works when the person holding the item is also the
+    * person who can fix it. In a party that is the exception: the smith is
+    * usually not the one carrying the broken sword.
+    *
+    * Splitting it into a chat exchange is what resolves that, because the two
+    * halves need different permissions and nobody holds both. Rolling needs
+    * the repairer's character; writing HP needs the item's owner. Each side
+    * acts entirely within their own rights, and the card carries what the
+    * other side cannot see.
+    *
+    * That last part is also why the numbers are pushed into the card rather
+    * than read off the item later: a table may deliberately keep players from
+    * browsing each other's gear, and asking for a repair is then exactly as
+    * much disclosure as the owner chose to make.
+    */
+   static async _onRequestRepair(event, target) {
+      const el = this.element
+      const dc = parseInt(el.querySelector("#repair-dc")?.value) || 15
+
+      const profile = getWearProfile(this.item)
+      const base = getWearBase(this.item) ?? this.repairLimit
+
+      /* Field repair has a floor: once the repair limit has eroded to within
+       * a point of the broken threshold there is nothing left to give up for
+       * it, and only a town forge will do. The check lives here so the
+       * request never goes out with an offer nobody can honour. */
+      const townOnly = profile ? profile.bt > this.repairLimit - 1 : false
+
+      const line = (key, data) =>
+         game.i18n.format(`pf2e-aztecs-sundered.chat.repair-request.${key}`, data)
+
+      const lines = [
+         `<strong>${line("header", { itemName: this.item.name })}</strong>`,
+         line("difficulty", {
+            level: this.item.system.level?.value ?? 0,
+            dc,
+         }),
+         line("state", {
+            currentHp: this.currentHitPoints,
+            repairLimit: this.repairLimit,
+            base,
+         }),
+      ]
+      if (townOnly) lines.push(`<strong>${line("town-only")}</strong>`)
+
+      await ChatMessage.create({
+         speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+         content: `<div class="pf2e chat-card"><header class="card-header flexrow"><img src="${this.item.img}" width="36" height="36"></header><div class="card-content">${lines.join("<br>")}</div></div>`,
+         flags: {
+            "pf2e-aztecs-sundered": {
+               repairRequest: {
+                  itemUuid: this.item.uuid,
+                  itemName: this.item.name,
+                  dc,
+                  townOnly,
+                  /* Snapshot for the repairer to read, never for applying:
+                   * the sword can take another hit before anyone gets to it,
+                   * and healing it from a stale number would resurrect HP. */
+                  currentHp: this.currentHitPoints,
+                  repairLimit: this.repairLimit,
+                  base,
+               },
+            },
+         },
+      })
+
+      this.close()
+   }
+
    static async _onRepair(event, target) {
       const el = this.element
       let finalDifficultyClass =
@@ -167,28 +246,11 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
          dc: { value: finalDifficultyClass },
          event: event,
          callback: async (rollResult, outcomeType) => {
-            if (!outcomeType) {
-               let degreeOfSuccess =
-                  rollResult.total >= finalDifficultyClass + 10
-                     ? 3
-                     : rollResult.total >= finalDifficultyClass
-                       ? 2
-                       : rollResult.total <= finalDifficultyClass - 10
-                         ? 0
-                         : 1
-               if (rollResult.terms[0].results[0].result === 20)
-                  degreeOfSuccess = Math.min(3, degreeOfSuccess + 1)
-               if (rollResult.terms[0].results[0].result === 1)
-                  degreeOfSuccess = Math.max(0, degreeOfSuccess - 1)
-               outcomeType =
-                  degreeOfSuccess === 3
-                     ? "criticalSuccess"
-                     : degreeOfSuccess === 2
-                       ? "success"
-                       : degreeOfSuccess === 0
-                         ? "criticalFailure"
-                         : "failure"
-            }
+            outcomeType ??= getDegreeOfSuccess(
+               rollResult.total,
+               finalDifficultyClass,
+               rollResult.terms?.[0]?.results?.[0]?.result ?? null,
+            )
 
             let amountHealed = 0
             if (outcomeType === "criticalSuccess") amountHealed = critHeal
@@ -205,7 +267,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
             let newlyCalculatedHitPoints =
                amountHealed > 0
                   ? Math.min(
-                       this.maximumHitPoints,
+                       this.repairLimit,
                        this.currentHitPoints + amountHealed,
                     )
                   : Math.max(0, this.currentHitPoints + amountHealed)
@@ -218,9 +280,16 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
             else {
                targetItemUpdates["flags.world.currentHp"] =
                   newlyCalculatedHitPoints
+               /* First time anything writes durability to this item: give it
+                * the numbers its material says it should have. This used to
+                * store a hardcoded hardness of 5 and whatever maximum the
+                * window happened to be showing, which quietly turned every
+                * repaired-but-untracked item into the same generic object. */
                if (this.item.getFlag("world", "maxHp") === undefined) {
-                  targetItemUpdates["flags.world.maxHp"] = this.maximumHitPoints
-                  targetItemUpdates["flags.world.hardness"] = 5
+                  targetItemUpdates["flags.world.maxHp"] =
+                     this.materialDefaults.maxHp
+                  targetItemUpdates["flags.world.hardness"] =
+                     this.materialDefaults.hardness
                }
             }
             await this.item.update(targetItemUpdates)
@@ -291,7 +360,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
             ChatMessage.create({
                user: game.user.id,
                speaker: ChatMessage.getSpeaker({ actor: this.actor || null }),
-               content: `<div class=\"pf2e chat-card\"><header class=\"card-header flexrow\"><img src=\"${this.item.img}\" title=\"${this.item.name}\" width=\"36\" height=\"36\"/><h3>${titleBase}</h3></header><div class=\"card-content\" style=\"margin-top: 5px;\"><div style=\"color: ${outcomeColor}; font-weight: bold; font-size: 1.1em; text-align: center; margin: 4px 0;\">${outcomeTextMap[outcomeType] || rolledFallback}</div><div>${amountText}</div><div style=\"text-align: center; margin-top: 5px;\">${currentHpLabel}: <strong>${newlyCalculatedHitPoints} / ${this.maximumHitPoints}</strong></div></div></div>`,
+               content: `<div class=\"pf2e chat-card\"><header class=\"card-header flexrow\"><img src=\"${this.item.img}\" title=\"${this.item.name}\" width=\"36\" height=\"36\"/><h3>${titleBase}</h3></header><div class=\"card-content\" style=\"margin-top: 5px;\"><div style=\"color: ${outcomeColor}; font-weight: bold; font-size: 1.1em; text-align: center; margin: 4px 0;\">${outcomeTextMap[outcomeType] || rolledFallback}</div><div>${amountText}</div><div style=\"text-align: center; margin-top: 5px;\">${currentHpLabel}: <strong>${newlyCalculatedHitPoints} / ${this.repairLimit}</strong></div></div></div>`,
             })
          },
       })

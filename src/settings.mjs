@@ -1,3 +1,5 @@
+import { getBrokenThreshold } from "./wear.mjs"
+
 const forceStateSync = foundry.utils.debounce(async () => {
    const updates = []
    for (let actor of game.actors) {
@@ -5,7 +7,7 @@ const forceStateSync = foundry.utils.debounce(async () => {
          if (item.type === "armor" || item.type === "weapon") {
             let maxHp = item.getFlag("world", "maxHp")
             let currentHp = item.getFlag("world", "currentHp")
-            if (maxHp && currentHp <= Math.floor(maxHp / 2)) {
+            if (maxHp && currentHp <= getBrokenThreshold(item, maxHp)) {
                updates.push(
                   item.update({ "flags.world.durabilitySync": Date.now() }),
                )
@@ -189,7 +191,7 @@ export const registerSettings = () => {
       scope: "world",
       config: true,
       type: Boolean,
-      default: true,
+      default: false,
       onChange: forceStateSync,
    })
 
@@ -199,7 +201,7 @@ export const registerSettings = () => {
       scope: "world",
       config: true,
       type: Boolean,
-      default: true,
+      default: false,
       onChange: forceStateSync,
    })
 
@@ -209,7 +211,7 @@ export const registerSettings = () => {
       scope: "world",
       config: true,
       type: Boolean,
-      default: true,
+      default: false,
       onChange: forceStateSync,
    })
 
@@ -219,7 +221,7 @@ export const registerSettings = () => {
       scope: "world",
       config: true,
       type: Boolean,
-      default: true,
+      default: false,
       onChange: forceStateSync,
    })
 
@@ -229,7 +231,7 @@ export const registerSettings = () => {
       scope: "world",
       config: true,
       type: Boolean,
-      default: true,
+      default: false,
       onChange: forceStateSync,
    })
 
@@ -239,7 +241,7 @@ export const registerSettings = () => {
       scope: "world",
       config: true,
       type: Boolean,
-      default: true,
+      default: false,
       onChange: forceStateSync,
    })
 
@@ -268,6 +270,105 @@ export const registerSettings = () => {
       config: true,
       type: Boolean,
       default: false,
+   })
+
+   /* -----------------------------------------------------------------------
+    * Wear & Tear (homebrew attrition system)
+    *
+    * Master switch defaults to OFF: the system rewrites how items break and
+    * how Repair behaves, so an existing world must opt in deliberately.
+    * Every sub-setting is read live by getWearProfile() in wear.mjs, so no
+    * reload is required — the next trigger simply uses the new numbers.
+    * -------------------------------------------------------------------- */
+
+   game.settings.register("pf2e-aztecs-sundered", "enableWearSystem", {
+      name: "pf2e-aztecs-sundered.settings.enableWearSystem.name",
+      hint: "pf2e-aztecs-sundered.settings.enableWearSystem.hint",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: false,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "enableWeaponWear", {
+      name: "pf2e-aztecs-sundered.settings.enableWeaponWear.name",
+      hint: "pf2e-aztecs-sundered.settings.enableWeaponWear.hint",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: true,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "enableArmourWear", {
+      name: "pf2e-aztecs-sundered.settings.enableArmourWear.name",
+      hint: "pf2e-aztecs-sundered.settings.enableArmourWear.hint",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: true,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "wearFullRepair", {
+      name: "pf2e-aztecs-sundered.settings.wearFullRepair.name",
+      hint: "pf2e-aztecs-sundered.settings.wearFullRepair.hint",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: true,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "wearDamageFormula", {
+      name: "pf2e-aztecs-sundered.settings.wearDamageFormula.name",
+      hint: "pf2e-aztecs-sundered.settings.wearDamageFormula.hint",
+      scope: "world",
+      config: true,
+      type: String,
+      default: "1d4",
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "wearBrokenStrikeCost", {
+      name: "pf2e-aztecs-sundered.settings.wearBrokenStrikeCost.name",
+      hint: "pf2e-aztecs-sundered.settings.wearBrokenStrikeCost.hint",
+      scope: "world",
+      config: true,
+      type: Number,
+      default: 1,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "wearWeaponDivisor", {
+      name: "pf2e-aztecs-sundered.settings.wearWeaponDivisor.name",
+      hint: "pf2e-aztecs-sundered.settings.wearWeaponDivisor.hint",
+      scope: "world",
+      config: true,
+      type: Number,
+      default: 40,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "wearArmourDivisor", {
+      name: "pf2e-aztecs-sundered.settings.wearArmourDivisor.name",
+      hint: "pf2e-aztecs-sundered.settings.wearArmourDivisor.hint",
+      scope: "world",
+      config: true,
+      type: Number,
+      default: 80,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "wearWeaponBtPercent", {
+      name: "pf2e-aztecs-sundered.settings.wearWeaponBtPercent.name",
+      hint: "pf2e-aztecs-sundered.settings.wearWeaponBtPercent.hint",
+      scope: "world",
+      config: true,
+      type: Number,
+      default: 25,
+   })
+
+   game.settings.register("pf2e-aztecs-sundered", "wearArmourBtPercent", {
+      name: "pf2e-aztecs-sundered.settings.wearArmourBtPercent.name",
+      hint: "pf2e-aztecs-sundered.settings.wearArmourBtPercent.hint",
+      scope: "world",
+      config: true,
+      type: Number,
+      default: 50,
    })
 }
 
@@ -372,11 +473,44 @@ Hooks.on("renderSettingsConfig", (app, htmlData) => {
       }
    }
 
+   // Wear settings are meaningless while the master switch is off, so the
+   // whole block is hidden rather than merely disabled — it keeps the
+   // settings sheet short for tables that never enable the system.
+   const toggleWearDependencies = () => {
+      const master = html.querySelector(
+         'input[name="pf2e-aztecs-sundered.enableWearSystem"]',
+      )
+      if (!master) return
+
+      const dependants = [
+         "enableWeaponWear",
+         "enableArmourWear",
+         "wearFullRepair",
+         "wearDamageFormula",
+         "wearBrokenStrikeCost",
+         "wearWeaponDivisor",
+         "wearArmourDivisor",
+         "wearWeaponBtPercent",
+         "wearArmourBtPercent",
+      ]
+
+      dependants.forEach((key) => {
+         const input = html.querySelector(
+            `[name="pf2e-aztecs-sundered.${key}"]`,
+         )
+         const group = input?.closest(".form-group")
+         if (group) group.style.display = master.checked ? "" : "none"
+      })
+   }
+
    toggleUIDependencies()
    toggleDependencies()
+   toggleWearDependencies()
 
    html.addEventListener("change", (e) => {
-      if (e.target.name.startsWith("pf2e-aztecs-sundered.show")) {
+      if (e.target.name === "pf2e-aztecs-sundered.enableWearSystem") {
+         toggleWearDependencies()
+      } else if (e.target.name.startsWith("pf2e-aztecs-sundered.show")) {
          toggleUIDependencies()
       } else if (
          e.target.name === "pf2e-aztecs-sundered.suppressArmourPotency" ||
