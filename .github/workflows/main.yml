@@ -1,137 +1,112 @@
-# GitHub Actions workflow for creating a new FoundryVTT module release.
+# Cuts a release whenever the version in VERSION changes.
 #
-# Useful References:
-#   - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
-#   - https://docs.github.com/en/actions/learn-github-actions/contexts
-#   - https://docs.github.com/en/actions/learn-github-actions/environment-variables
+# The version lives in its own file rather than in module.json, because
+# module.json is Foundry's artifact while VERSION is the repository's own
+# source of truth.
 #
-# Troubleshooting Checklist:
-#   - Is the module's manifest file valid JSON?
-#     You can test your manifest file using https://jsonlint.com/.
+# The working cycle is therefore:
 #
-#   - Does the module's manifest have all the required keys?
-#     See https://foundryvtt.com/article/module-development/#manifest for more
-#     information.
+#   edit code → bump VERSION → commit → push → the release builds itself
 #
-#   - Are all the proper files and directories being included in the release's
-#     module archive ("module.zip")?
-#     Check that the correct files are being passed to the `zip` command run
-#     in the "Create Module Archive" step below.
+# Ordinary commits that leave VERSION alone pass in silence: the job asks
+# whether a release with that version already exists and stops if it does.
+# Without that check every push would try to create the same release and fail.
 #
-#   - Is the release tag the proper format?
-#     See the comments for the "Extract Version From Tag" step below.
-#
-#   - Is a GitHub release being published?
-#     This workflow will only run when a release is published, not when a
-#     release is updated. Furthermore, note that while a GitHub release will
-#     (by default) create a repository tag, a repository tag will not create
-#     or publish a GitHub release.
-#
-#   - Has the module's entry on FoundryVTT's module administration site
-#     (https://foundryvtt.com/admin) been updated?
-#
-name: Create Module Files For GitHub Release
-
-env:
-   # The URL used for the module's "Project URL" link on FoundryVTT's website.
-   project_url: "https://github.com/${{github.repository}}"
-
-   # A URL that will always point to the latest manifest.
-   # FoundryVTT uses this URL to check whether the current module version that
-   # is installed is the latest version. This URL should NOT change,
-   # otherwise FoundryVTT won't be able to perform this check.
-   latest_manifest_url: "https://github.com/${{github.repository}}/releases/latest/download/module.json"
-
-   # The URL to the module archive associated with the module release being
-   # processed by this workflow.
-   release_module_url: "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip"
+# Everything happens in ONE job on purpose. The obvious alternative — one
+# workflow creates the release, a second reacts to it and attaches the files —
+# does not work: GitHub deliberately refuses to start a workflow from an event
+# raised with the built-in GITHUB_TOKEN, so the second would never run and the
+# release would sit there empty.
+name: Release
 
 on:
-   # Only run this workflow when a release is published.
-   # To modify this workflow when other events occur, see:
-   #   - https://docs.github.com/en/actions/using-workflows/triggering-a-workflow
-   #   - https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
-   #   - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
-   #
-   # Note that some steps may depend on context variables that are only
-   # available for release events, so if you add other events, you may need to
-   # alter other parts of this workflow.
-   release:
-      types: [published]
+   push:
+      branches: [main]
+   # For re-cutting a release by hand if one goes wrong.
+   workflow_dispatch:
+
+permissions:
+   contents: write
+
+env:
+   project_url: "https://github.com/${{github.repository}}"
+   # Always points at the newest release, which is how Foundry notices that an
+   # update exists. It must not name a specific version.
+   latest_manifest_url: "https://github.com/${{github.repository}}/releases/latest/download/module.json"
 
 jobs:
-   build:
+   release:
       runs-on: ubuntu-latest
-      permissions:
-         contents: write
-
       steps:
-         - name: Checkout Repository
+         - name: Check out the repository
            uses: actions/checkout@v6
 
-         # Extract version embedded in the tag.
-         # This step expects the tag to be one of the following formats:
-         #   - "v<major>.<minor>.<patch>" (e.g., "v1.2.3")
-         #   - "<major>.<minor>.<patch>"  (e.g., "1.2.3")
-         #
-         # The version will be used by later steps to fill in the value for the
-         # "version" key required for a valid module manifest.
-         - name: Extract Version From Tag
-           id: get_version
-           uses: battila7/get-version-action@v2
+         - name: Read the version
+           id: version
+           run: |
+              VERSION="$(tr -d ' \t\n\r' < VERSION)"
+              if [ -z "$VERSION" ]; then
+                 echo "::error::VERSION is empty"
+                 exit 1
+              fi
+              echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+              echo "Version in VERSION: $VERSION"
 
-         # Modify "module.json" with values specific to the release.
-         # Since the values for the "version" and "url" keys aren't known ahead of
-         # time, the manifest file in the repository is updated with these values.
+         - name: Has this version been released already?
+           id: check
+           env:
+              GH_TOKEN: ${{ github.token }}
+           run: |
+              if gh release view "${{ steps.version.outputs.value }}" >/dev/null 2>&1; then
+                 echo "exists=true" >> "$GITHUB_OUTPUT"
+                 echo "Release ${{ steps.version.outputs.value }} already exists — nothing to do."
+              else
+                 echo "exists=false" >> "$GITHUB_OUTPUT"
+                 echo "Version ${{ steps.version.outputs.value }} is new — building a release."
+              fi
+
+         # Fills the manifest's placeholders on the runner only. Nothing is
+         # committed back, so the repository keeps its #{...}# markers.
          #
-         # While this does modify the manifest file in-place, the changes are not
-         # commited to the repository, and only exist in the action's filesystem.
-         - name: Modify Module Manifest With Release-Specific Values
-           id: sub_manifest_link_version
+         # This is also why a raw link to module.json in the repository cannot
+         # be installed: a manifest fit for Foundry exists only as a release
+         # asset, and this is what makes it.
+         - name: Fill in the manifest
+           if: steps.check.outputs.exists == 'false'
            uses: cschleiden/replace-tokens@v1
            with:
               files: "module.json"
            env:
-              VERSION: ${{steps.get_version.outputs.version-without-v}}
+              VERSION: ${{ steps.version.outputs.value }}
               URL: ${{ env.project_url }}
               MANIFEST: ${{ env.latest_manifest_url }}
-              DOWNLOAD: ${{ env.release_module_url }}
+              DOWNLOAD: "https://github.com/${{github.repository}}/releases/download/${{ steps.version.outputs.value }}/module.zip"
 
-         # Create a "module.zip" archive containing all the module's required files.
-         # If you have other directories or files that will need to be added to
-         # your packaged module, add them here.
-         - name: Create Module Archive
+         # What Foundry will unpack into Data/modules/. `zip` only warns about
+         # files that do not exist, so naming LICENSE and CHANGELOG.md before
+         # they are written is harmless.
+         #
+         # Anything the module needs at runtime has to be listed here. Tests
+         # and docs are deliberately left out.
+         - name: Build the archive
+           if: steps.check.outputs.exists == 'false'
            run: |
-              # Note that `zip` will only emit warnings when a file or directory
-              # doesn't exist, it will not fail.
-              zip                                    \
-                `# Options`                          \
-                --recurse-paths                      \
-                `# The name of the output file`      \
-                 ./module.zip                        \
-                `# The files that will be included.` \
-                module.json                          \
-                README.md                            \
-                LICENSE                              \
-                CHANGELOG.md                         \
-                templates                            \
-                src/                                 \
-                styles/                              \
-                packs/                               \
-                languages/                           \
-              # Don't forget to add a backslash at the end of the line for any
-              # additional files or directories!
+              zip --recurse-paths ./module.zip \
+                 module.json \
+                 README.md \
+                 LICENSE \
+                 CHANGELOG.md \
+                 templates/ \
+                 src/ \
+                 styles/ \
+                 languages/
 
-         # Update the GitHub release with the manifest and module archive files.
-         - name: Update Release With Files
-           id: create_version_release
-           uses: ncipollo/release-action@v1
-           with:
-              allowUpdates: true
-              name: ${{ github.event.release.name }}
-              draft: ${{ github.event.release.unpublished }}
-              prerelease: ${{ github.event.release.prerelease }}
-              token: ${{ secrets.GITHUB_TOKEN }}
-              artifacts: "./module.json, ./module.zip"
-              tag: ${{ github.event.release.tag_name }}
-              body: ${{ github.event.release.body }}
+         - name: Publish the release
+           if: steps.check.outputs.exists == 'false'
+           env:
+              GH_TOKEN: ${{ github.token }}
+           run: |
+              gh release create "${{ steps.version.outputs.value }}" \
+                 module.json module.zip \
+                 --title "${{ steps.version.outputs.value }}" \
+                 --generate-notes

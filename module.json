@@ -1,7 +1,7 @@
 {
-   "id": "pf2e-aztecs-sundered",
-   "title": "PF2e Aztec's Sundered",
-   "description": "A dynamic equipment durability and material tracking system for Pathfinder 2e.",
+   "id": "pf2e-items-sunder-wear",
+   "title": "PF2e Items - Sunder & Wear",
+   "description": "Item durability for Pathfinder 2e: deliberate destruction and gradual attrition. Tracks HP, Hardness and materials for weapons, armour and gear, and adds an optional homebrew wear system — weapons wear down on a natural 1, armour when its wearer is critically hit, and every field repair permanently lowers what repair can restore. Heavily reworked fork of PF2e Aztec's Sundered by Aztec.",
    "version": "#{VERSION}#",
    "compatibility": {
       "minimum": "13",
@@ -9,9 +9,32 @@
    },
    "authors": [
       {
-         "name": "Aztec"
+         "name": "Ramzeth",
+         "url": "https://github.com/Ramzeth"
+      },
+      {
+         "name": "Aztec",
+         "flags": {
+            "credit": "Author of PF2e Aztec's Sundered, which this module is based on"
+         }
       }
    ],
+   "relationships": {
+      "systems": [
+         {
+            "id": "pf2e",
+            "type": "system",
+            "compatibility": {}
+         }
+      ],
+      "conflicts": [
+         {
+            "id": "pf2e-aztecs-sundered",
+            "type": "module",
+            "reason": "Both modules track the same item durability flags and inject the same controls"
+         }
+      ]
+   },
    "esmodules": ["src/main.mjs"],
    "languages": [
       {
@@ -33,14 +56,5 @@
    "styles": ["styles/module.css"],
    "url": "#{URL}#",
    "manifest": "#{MANIFEST}#",
-   "download": "#{DOWNLOAD}#",
-   "packs": [
-      {
-         "name": "pf2e-sundered-macros",
-         "label": "PF2e Sundered Macros",
-         "path": "packs/pf2e-sundered-macros",
-         "type": "Macro",
-         "system": "pf2e"
-      }
-   ]
+   "download": "#{DOWNLOAD}#"
 }

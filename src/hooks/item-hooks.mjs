@@ -37,7 +37,7 @@ export function registerItemHooks() {
                ) {
                   ui.notifications.warn(
                      game.i18n.format(
-                        "pf2e-aztecs-sundered.notifications.cant-stow",
+                        "pf2e-items-sunder-wear.notifications.cant-stow",
                         { containerName: backpackContainer.name },
                      ),
                   )
@@ -127,7 +127,7 @@ export function registerItemHooks() {
             ) {
                ui.notifications.warn(
                   game.i18n.format(
-                     "pf2e-aztecs-sundered.notifications.cant-equip",
+                     "pf2e-items-sunder-wear.notifications.cant-equip",
                      { itemName: item.name },
                   ),
                )
@@ -154,15 +154,15 @@ export function registerItemHooks() {
       if (item.type === "armor") {
          let armorPenalty =
             item.system.category === "light"
-               ? game.settings.get("pf2e-aztecs-sundered", "armourPenaltyLight")
+               ? game.settings.get("pf2e-items-sunder-wear", "armourPenaltyLight")
                : item.system.category === "medium"
                  ? game.settings.get(
-                      "pf2e-aztecs-sundered",
+                      "pf2e-items-sunder-wear",
                       "armourPenaltyMedium",
                    )
                  : item.system.category === "heavy"
                    ? game.settings.get(
-                        "pf2e-aztecs-sundered",
+                        "pf2e-items-sunder-wear",
                         "armourPenaltyHeavy",
                      )
                    : 0
@@ -172,7 +172,7 @@ export function registerItemHooks() {
                0,
                armorPenalty -
                   game.settings.get(
-                     "pf2e-aztecs-sundered",
+                     "pf2e-items-sunder-wear",
                      "laminarPenaltyReduction",
                   ),
             )
@@ -184,7 +184,7 @@ export function registerItemHooks() {
 
          if (
             isBroken &&
-            game.settings.get("pf2e-aztecs-sundered", "enableArmourPenalty") &&
+            game.settings.get("pf2e-items-sunder-wear", "enableArmourPenalty") &&
             armorPenalty !== 0
          ) {
             if (brokenArmorIndex === -1) {
@@ -194,7 +194,7 @@ export function registerItemHooks() {
                   value: armorPenalty,
                   slug: "broken-armour-penalty",
                   label: game.i18n.localize(
-                     "pf2e-aztecs-sundered.rule-elements.broken.armor",
+                     "pf2e-items-sunder-wear.rule-elements.broken.armor",
                   ),
                })
                rulesHaveChanged = true
@@ -210,7 +210,7 @@ export function registerItemHooks() {
 
       if (item.type === "weapon") {
          let weaponPenaltyAmount = game.settings.get(
-            "pf2e-aztecs-sundered",
+            "pf2e-items-sunder-wear",
             "weaponPenaltyAmount",
          )
          let brokenAttackIndex = itemRules.findIndex(
@@ -222,7 +222,7 @@ export function registerItemHooks() {
 
          if (
             isBroken &&
-            game.settings.get("pf2e-aztecs-sundered", "enableWeaponPenalty") &&
+            game.settings.get("pf2e-items-sunder-wear", "enableWeaponPenalty") &&
             weaponPenaltyAmount !== 0
          ) {
             if (brokenAttackIndex === -1) {
@@ -233,7 +233,7 @@ export function registerItemHooks() {
                   value: weaponPenaltyAmount,
                   slug: "broken-weapon-attack",
                   label: game.i18n.localize(
-                     "pf2e-aztecs-sundered.rule-elements.broken.weapon",
+                     "pf2e-items-sunder-wear.rule-elements.broken.weapon",
                   ),
                })
                rulesHaveChanged = true
@@ -251,7 +251,7 @@ export function registerItemHooks() {
                   value: weaponPenaltyAmount,
                   slug: "broken-weapon-damage",
                   label: game.i18n.localize(
-                     "pf2e-aztecs-sundered.rule-elements.broken.weapon",
+                     "pf2e-items-sunder-wear.rule-elements.broken.weapon",
                   ),
                })
                rulesHaveChanged = true
@@ -292,7 +292,7 @@ export function registerItemHooks() {
          if (item.type === "armor") {
             if (
                game.settings.get(
-                  "pf2e-aztecs-sundered",
+                  "pf2e-items-sunder-wear",
                   "suppressArmourPotency",
                )
             ) {
@@ -302,14 +302,14 @@ export function registerItemHooks() {
             } else {
                if (
                   game.settings.get(
-                     "pf2e-aztecs-sundered",
+                     "pf2e-items-sunder-wear",
                      "suppressArmourResilient",
                   )
                )
                   desiredRunes.resilient = 0
                if (
                   game.settings.get(
-                     "pf2e-aztecs-sundered",
+                     "pf2e-items-sunder-wear",
                      "suppressArmourProperty",
                   )
                )
@@ -318,7 +318,7 @@ export function registerItemHooks() {
          } else if (item.type === "weapon") {
             if (
                game.settings.get(
-                  "pf2e-aztecs-sundered",
+                  "pf2e-items-sunder-wear",
                   "suppressWeaponPotency",
                )
             ) {
@@ -328,14 +328,14 @@ export function registerItemHooks() {
             } else {
                if (
                   game.settings.get(
-                     "pf2e-aztecs-sundered",
+                     "pf2e-items-sunder-wear",
                      "suppressWeaponStriking",
                   )
                )
                   desiredRunes.striking = 0
                if (
                   game.settings.get(
-                     "pf2e-aztecs-sundered",
+                     "pf2e-items-sunder-wear",
                      "suppressWeaponProperty",
                   )
                )

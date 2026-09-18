@@ -48,7 +48,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       id: "sunder-app",
       classes: ["pf2e"],
       position: { width: 420, height: "auto" },
-      window: { title: "pf2e-aztecs-sundered.sheet-text.sunder-item" },
+      window: { title: "pf2e-items-sunder-wear.sheet-text.sunder-item" },
       actions: {
          addDamage: this._onAddDamage,
          removeDamage: this._onRemoveDamage,
@@ -58,7 +58,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
    static PARTS = {
       main: {
-         template: "modules/pf2e-aztecs-sundered/templates/sunder-dialog.hbs",
+         template: "modules/pf2e-items-sunder-wear/templates/sunder-dialog.hbs",
       },
    }
 
@@ -155,7 +155,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
          btn.className = "apply-damage-btn"
          btn.style.marginTop = "10px"
          btn.dataset.action = "applyDamage"
-         btn.innerHTML = `<i class="fa-solid fa-hammer"></i> ${game.i18n.localize("pf2e-aztecs-sundered.dialog.sunder.apply-damage")}`
+         btn.innerHTML = `<i class="fa-solid fa-hammer"></i> ${game.i18n.localize("pf2e-items-sunder-wear.dialog.sunder.apply-damage")}`
          el.appendChild(btn)
       }
 
@@ -294,7 +294,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
                   game.i18n.localize(CONFIG.PF2E.immunityTypes?.[imm] || imm),
                )
                .join(", ")
-            htmlContent += `<div><strong>${game.i18n.localize("pf2e-aztecs-sundered.dialog.durability.immunities")}:</strong> ${labels}</div>`
+            htmlContent += `<div><strong>${game.i18n.localize("pf2e-items-sunder-wear.dialog.durability.immunities")}:</strong> ${labels}</div>`
          }
          if (weaknesses.length > 0) {
             const labels = weaknesses
@@ -303,7 +303,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
                      `${game.i18n.localize(CONFIG.PF2E.weaknessTypes?.[w.type] || w.type)} ${w.value}`,
                )
                .join(", ")
-            htmlContent += `<div><strong>${game.i18n.localize("pf2e-aztecs-sundered.dialog.durability.weaknesses")}:</strong> ${labels}</div>`
+            htmlContent += `<div><strong>${game.i18n.localize("pf2e-items-sunder-wear.dialog.durability.weaknesses")}:</strong> ${labels}</div>`
          }
          if (resistances.length > 0) {
             const labels = resistances
@@ -312,7 +312,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
                      `${game.i18n.localize(CONFIG.PF2E.resistanceTypes?.[r.type] || r.type)} ${r.value}`,
                )
                .join(", ")
-            htmlContent += `<div><strong>${game.i18n.localize("pf2e-aztecs-sundered.dialog.durability.resistances")}:</strong> ${labels}</div>`
+            htmlContent += `<div><strong>${game.i18n.localize("pf2e-items-sunder-wear.dialog.durability.resistances")}:</strong> ${labels}</div>`
          }
 
          if (htmlContent) {
@@ -521,13 +521,13 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
          const itemsToCreate = persistentEffectsToCreate.map((eff) => {
             return {
                name: game.i18n.format(
-                  "pf2e-aztecs-sundered.effect.persistent-damage.name",
+                  "pf2e-items-sunder-wear.effect.persistent-damage.name",
                   { itemName: itemRef.name },
                ),
                type: "effect",
                img: "systems/pf2e/icons/conditions/persistent-damage.webp",
                flags: {
-                  "pf2e-aztecs-sundered": {
+                  "pf2e-items-sunder-wear": {
                      itemId: itemRef.id,
                      formula: eff.formula,
                      type: eff.type,
@@ -540,7 +540,7 @@ export class SunderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
 
       const chatContent = game.i18n.format(
-         "pf2e-aztecs-sundered.chat.sunder.content",
+         "pf2e-items-sunder-wear.chat.sunder.content",
          {
             itemName: itemRef.name,
             damage: finalDmgToHp,

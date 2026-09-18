@@ -26,7 +26,7 @@ import {
    getHealBudget,
 } from "../repair.mjs"
 
-const MODULE_ID = "pf2e-aztecs-sundered"
+const MODULE_ID = "pf2e-items-sunder-wear"
 
 /**
  * Find the answer to a repair request, if somebody has already rolled one.
@@ -137,13 +137,13 @@ async function pickRepairer(candidates) {
    const chosen = await foundry.applications.api.DialogV2.prompt({
       window: {
          title: game.i18n.localize(
-            "pf2e-aztecs-sundered.dialog.repair.who-repairs",
+            "pf2e-items-sunder-wear.dialog.repair.who-repairs",
          ),
       },
       content: `<select name="actorId" style="width: 100%;">${options}</select>`,
       ok: {
          label: game.i18n.localize(
-            "pf2e-aztecs-sundered.dialog.repair.roll-crafting",
+            "pf2e-items-sunder-wear.dialog.repair.roll-crafting",
          ),
          callback: (event, button) => button.form.elements.actorId.value,
       },
@@ -172,7 +172,7 @@ export function registerRepairHooks() {
                     data-request-id="${message.id}">
                <i class="fa-solid fa-hammer fa-fw" inert=""></i>
                <span>${game.i18n.localize(
-                  "pf2e-aztecs-sundered.chat.repair-request.repair-button",
+                  "pf2e-items-sunder-wear.chat.repair-request.repair-button",
                )}</span>
             </button>
          </div>`,
@@ -208,7 +208,7 @@ export function registerRepairHooks() {
                     data-result-id="${message.id}">
                <i class="fa-solid fa-wrench fa-fw" inert=""></i>
                <span>${game.i18n.localize(
-                  "pf2e-aztecs-sundered.chat.repair-result.apply-button",
+                  "pf2e-items-sunder-wear.chat.repair-result.apply-button",
                )}</span>
             </button>
          </div>`,
@@ -260,7 +260,7 @@ async function onRepairButton(event) {
    if (!hasRepairKit(repairer)) {
       button.disabled = false
       return ui.notifications.warn(
-         game.i18n.format("pf2e-aztecs-sundered.notifications.no-repair-kit", {
+         game.i18n.format("pf2e-items-sunder-wear.notifications.no-repair-kit", {
             actorName: repairer.name,
          }),
       )
@@ -271,7 +271,7 @@ async function onRepairButton(event) {
       button.disabled = false
       return ui.notifications.warn(
          game.i18n.localize(
-            "pf2e-aztecs-sundered.notifications.no-crafting-skill",
+            "pf2e-items-sunder-wear.notifications.no-crafting-skill",
          ),
       )
    }
@@ -294,7 +294,7 @@ async function onRepairButton(event) {
 
          const line = (key, data) =>
             game.i18n.format(
-               `pf2e-aztecs-sundered.chat.repair-result.${key}`,
+               `pf2e-items-sunder-wear.chat.repair-result.${key}`,
                data,
             )
          /* With full repair on, the budget stops being the promise — one
@@ -354,11 +354,11 @@ function formatDuration(minutes) {
    const rest = minutes % 60
 
    if (hours === 0)
-      return game.i18n.format("pf2e-aztecs-sundered.time.minutes", { minutes })
+      return game.i18n.format("pf2e-items-sunder-wear.time.minutes", { minutes })
    if (rest === 0)
-      return game.i18n.format("pf2e-aztecs-sundered.time.hours", { hours })
+      return game.i18n.format("pf2e-items-sunder-wear.time.hours", { hours })
 
-   return game.i18n.format("pf2e-aztecs-sundered.time.hours-minutes", {
+   return game.i18n.format("pf2e-items-sunder-wear.time.hours-minutes", {
       hours,
       minutes: rest,
    })
@@ -424,7 +424,7 @@ async function onApplyButton(event) {
    }
 
    const line = (key, data) =>
-      game.i18n.format(`pf2e-aztecs-sundered.chat.repair-applied.${key}`, data)
+      game.i18n.format(`pf2e-items-sunder-wear.chat.repair-applied.${key}`, data)
 
    const lines = [
       `<strong>${line("header", { itemName: item.name })}</strong>`,

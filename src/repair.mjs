@@ -316,7 +316,7 @@ export async function applyRepair(
       currentHp: hpAfterDamage,
       repairLimit: limitAfter,
       healBudget,
-      fullRepair: game.settings.get("pf2e-aztecs-sundered", "wearFullRepair"),
+      fullRepair: game.settings.get("pf2e-items-sunder-wear", "wearFullRepair"),
    })
 
    const update = { "flags.world.currentHp": hpAfter }

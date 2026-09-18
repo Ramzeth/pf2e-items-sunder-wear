@@ -19,9 +19,9 @@ const forceStateSync = foundry.utils.debounce(async () => {
 }, 500)
 
 export const registerSettings = () => {
-   game.settings.register("pf2e-aztecs-sundered", "showInventoryUI", {
-      name: "pf2e-aztecs-sundered.settings.showInventoryUI.name",
-      hint: "pf2e-aztecs-sundered.settings.showInventoryUI.hint",
+   game.settings.register("pf2e-items-sunder-wear", "showInventoryUI", {
+      name: "pf2e-items-sunder-wear.settings.showInventoryUI.name",
+      hint: "pf2e-items-sunder-wear.settings.showInventoryUI.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -29,9 +29,9 @@ export const registerSettings = () => {
       requiresReload: true,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "showInventoryUI_players", {
-      name: "pf2e-aztecs-sundered.settings.showForPlayers.name",
-      hint: "pf2e-aztecs-sundered.settings.showForPlayers.hint",
+   game.settings.register("pf2e-items-sunder-wear", "showInventoryUI_players", {
+      name: "pf2e-items-sunder-wear.settings.showForPlayers.name",
+      hint: "pf2e-items-sunder-wear.settings.showForPlayers.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -39,9 +39,9 @@ export const registerSettings = () => {
       requiresReload: true,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "showDamageButtonUI", {
-      name: "pf2e-aztecs-sundered.settings.showDamageButtonUI.name",
-      hint: "pf2e-aztecs-sundered.settings.showDamageButtonUI.hint",
+   game.settings.register("pf2e-items-sunder-wear", "showDamageButtonUI", {
+      name: "pf2e-items-sunder-wear.settings.showDamageButtonUI.name",
+      hint: "pf2e-items-sunder-wear.settings.showDamageButtonUI.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -50,11 +50,11 @@ export const registerSettings = () => {
    })
 
    game.settings.register(
-      "pf2e-aztecs-sundered",
+      "pf2e-items-sunder-wear",
       "showDamageButtonUI_players",
       {
-         name: "pf2e-aztecs-sundered.settings.showForPlayers.name",
-         hint: "pf2e-aztecs-sundered.settings.showForPlayers.hint",
+         name: "pf2e-items-sunder-wear.settings.showForPlayers.name",
+         hint: "pf2e-items-sunder-wear.settings.showForPlayers.hint",
          scope: "world",
          config: true,
          type: Boolean,
@@ -64,11 +64,11 @@ export const registerSettings = () => {
    )
 
    game.settings.register(
-      "pf2e-aztecs-sundered",
+      "pf2e-items-sunder-wear",
       "showTrackDurabilityButtonUI",
       {
-         name: "pf2e-aztecs-sundered.settings.showTrackDurabilityButtonUI.name",
-         hint: "pf2e-aztecs-sundered.settings.showTrackDurabilityButtonUI.hint",
+         name: "pf2e-items-sunder-wear.settings.showTrackDurabilityButtonUI.name",
+         hint: "pf2e-items-sunder-wear.settings.showTrackDurabilityButtonUI.hint",
          scope: "world",
          config: true,
          type: Boolean,
@@ -78,11 +78,11 @@ export const registerSettings = () => {
    )
 
    game.settings.register(
-      "pf2e-aztecs-sundered",
+      "pf2e-items-sunder-wear",
       "showTrackDurabilityButtonUI_players",
       {
-         name: "pf2e-aztecs-sundered.settings.showForPlayers.name",
-         hint: "pf2e-aztecs-sundered.settings.showForPlayers.hint",
+         name: "pf2e-items-sunder-wear.settings.showForPlayers.name",
+         hint: "pf2e-items-sunder-wear.settings.showForPlayers.hint",
          scope: "world",
          config: true,
          type: Boolean,
@@ -91,9 +91,9 @@ export const registerSettings = () => {
       },
    )
 
-   game.settings.register("pf2e-aztecs-sundered", "showRepairButtonUI", {
-      name: "pf2e-aztecs-sundered.settings.showRepairButtonUI.name",
-      hint: "pf2e-aztecs-sundered.settings.showRepairButtonUI.hint",
+   game.settings.register("pf2e-items-sunder-wear", "showRepairButtonUI", {
+      name: "pf2e-items-sunder-wear.settings.showRepairButtonUI.name",
+      hint: "pf2e-items-sunder-wear.settings.showRepairButtonUI.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -102,11 +102,11 @@ export const registerSettings = () => {
    })
 
    game.settings.register(
-      "pf2e-aztecs-sundered",
+      "pf2e-items-sunder-wear",
       "showRepairButtonUI_players",
       {
-         name: "pf2e-aztecs-sundered.settings.showForPlayers.name",
-         hint: "pf2e-aztecs-sundered.settings.showForPlayers.hint",
+         name: "pf2e-items-sunder-wear.settings.showForPlayers.name",
+         hint: "pf2e-items-sunder-wear.settings.showForPlayers.hint",
          scope: "world",
          config: true,
          type: Boolean,
@@ -115,9 +115,9 @@ export const registerSettings = () => {
       },
    )
 
-   game.settings.register("pf2e-aztecs-sundered", "enableArmourPenalty", {
-      name: "pf2e-aztecs-sundered.settings.enableArmourPenalty.name",
-      hint: "pf2e-aztecs-sundered.settings.enableArmourPenalty.hint",
+   game.settings.register("pf2e-items-sunder-wear", "enableArmourPenalty", {
+      name: "pf2e-items-sunder-wear.settings.enableArmourPenalty.name",
+      hint: "pf2e-items-sunder-wear.settings.enableArmourPenalty.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -125,9 +125,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "armourPenaltyLight", {
-      name: "pf2e-aztecs-sundered.settings.armourPenaltyLight.name",
-      hint: "pf2e-aztecs-sundered.settings.armourPenaltyLight.hint",
+   game.settings.register("pf2e-items-sunder-wear", "armourPenaltyLight", {
+      name: "pf2e-items-sunder-wear.settings.armourPenaltyLight.name",
+      hint: "pf2e-items-sunder-wear.settings.armourPenaltyLight.hint",
       scope: "world",
       config: true,
       type: Number,
@@ -135,9 +135,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "armourPenaltyMedium", {
-      name: "pf2e-aztecs-sundered.settings.armourPenaltyMedium.name",
-      hint: "pf2e-aztecs-sundered.settings.armourPenaltyMedium.hint",
+   game.settings.register("pf2e-items-sunder-wear", "armourPenaltyMedium", {
+      name: "pf2e-items-sunder-wear.settings.armourPenaltyMedium.name",
+      hint: "pf2e-items-sunder-wear.settings.armourPenaltyMedium.hint",
       scope: "world",
       config: true,
       type: Number,
@@ -145,9 +145,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "armourPenaltyHeavy", {
-      name: "pf2e-aztecs-sundered.settings.armourPenaltyHeavy.name",
-      hint: "pf2e-aztecs-sundered.settings.armourPenaltyHeavy.hint",
+   game.settings.register("pf2e-items-sunder-wear", "armourPenaltyHeavy", {
+      name: "pf2e-items-sunder-wear.settings.armourPenaltyHeavy.name",
+      hint: "pf2e-items-sunder-wear.settings.armourPenaltyHeavy.hint",
       scope: "world",
       config: true,
       type: Number,
@@ -155,9 +155,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "laminarPenaltyReduction", {
-      name: "pf2e-aztecs-sundered.settings.laminarPenaltyReduction.name",
-      hint: "pf2e-aztecs-sundered.settings.laminarPenaltyReduction.hint",
+   game.settings.register("pf2e-items-sunder-wear", "laminarPenaltyReduction", {
+      name: "pf2e-items-sunder-wear.settings.laminarPenaltyReduction.name",
+      hint: "pf2e-items-sunder-wear.settings.laminarPenaltyReduction.hint",
       scope: "world",
       config: true,
       type: Number,
@@ -165,9 +165,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "enableWeaponPenalty", {
-      name: "pf2e-aztecs-sundered.settings.enableWeaponPenalty.name",
-      hint: "pf2e-aztecs-sundered.settings.enableWeaponPenalty.hint",
+   game.settings.register("pf2e-items-sunder-wear", "enableWeaponPenalty", {
+      name: "pf2e-items-sunder-wear.settings.enableWeaponPenalty.name",
+      hint: "pf2e-items-sunder-wear.settings.enableWeaponPenalty.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -175,9 +175,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "weaponPenaltyAmount", {
-      name: "pf2e-aztecs-sundered.settings.weaponPenaltyAmount.name",
-      hint: "pf2e-aztecs-sundered.settings.weaponPenaltyAmount.hint",
+   game.settings.register("pf2e-items-sunder-wear", "weaponPenaltyAmount", {
+      name: "pf2e-items-sunder-wear.settings.weaponPenaltyAmount.name",
+      hint: "pf2e-items-sunder-wear.settings.weaponPenaltyAmount.hint",
       scope: "world",
       config: true,
       type: Number,
@@ -185,9 +185,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "suppressArmourPotency", {
-      name: "pf2e-aztecs-sundered.settings.suppressArmourPotency.name",
-      hint: "pf2e-aztecs-sundered.settings.suppressArmourPotency.hint",
+   game.settings.register("pf2e-items-sunder-wear", "suppressArmourPotency", {
+      name: "pf2e-items-sunder-wear.settings.suppressArmourPotency.name",
+      hint: "pf2e-items-sunder-wear.settings.suppressArmourPotency.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -195,9 +195,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "suppressArmourResilient", {
-      name: "pf2e-aztecs-sundered.settings.suppressArmourResilient.name",
-      hint: "pf2e-aztecs-sundered.settings.suppressArmourResilient.hint",
+   game.settings.register("pf2e-items-sunder-wear", "suppressArmourResilient", {
+      name: "pf2e-items-sunder-wear.settings.suppressArmourResilient.name",
+      hint: "pf2e-items-sunder-wear.settings.suppressArmourResilient.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -205,9 +205,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "suppressArmourProperty", {
-      name: "pf2e-aztecs-sundered.settings.suppressArmourProperty.name",
-      hint: "pf2e-aztecs-sundered.settings.suppressArmourProperty.hint",
+   game.settings.register("pf2e-items-sunder-wear", "suppressArmourProperty", {
+      name: "pf2e-items-sunder-wear.settings.suppressArmourProperty.name",
+      hint: "pf2e-items-sunder-wear.settings.suppressArmourProperty.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -215,9 +215,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "suppressWeaponPotency", {
-      name: "pf2e-aztecs-sundered.settings.suppressWeaponPotency.name",
-      hint: "pf2e-aztecs-sundered.settings.suppressWeaponPotency.hint",
+   game.settings.register("pf2e-items-sunder-wear", "suppressWeaponPotency", {
+      name: "pf2e-items-sunder-wear.settings.suppressWeaponPotency.name",
+      hint: "pf2e-items-sunder-wear.settings.suppressWeaponPotency.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -225,9 +225,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "suppressWeaponStriking", {
-      name: "pf2e-aztecs-sundered.settings.suppressWeaponStriking.name",
-      hint: "pf2e-aztecs-sundered.settings.suppressWeaponStriking.hint",
+   game.settings.register("pf2e-items-sunder-wear", "suppressWeaponStriking", {
+      name: "pf2e-items-sunder-wear.settings.suppressWeaponStriking.name",
+      hint: "pf2e-items-sunder-wear.settings.suppressWeaponStriking.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -235,9 +235,9 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "suppressWeaponProperty", {
-      name: "pf2e-aztecs-sundered.settings.suppressWeaponProperty.name",
-      hint: "pf2e-aztecs-sundered.settings.suppressWeaponProperty.hint",
+   game.settings.register("pf2e-items-sunder-wear", "suppressWeaponProperty", {
+      name: "pf2e-items-sunder-wear.settings.suppressWeaponProperty.name",
+      hint: "pf2e-items-sunder-wear.settings.suppressWeaponProperty.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -245,27 +245,27 @@ export const registerSettings = () => {
       onChange: forceStateSync,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "restrictPreciousMaterial", {
-      name: "pf2e-aztecs-sundered.settings.restrictPreciousMaterial.name",
-      hint: "pf2e-aztecs-sundered.settings.restrictPreciousMaterial.hint",
+   game.settings.register("pf2e-items-sunder-wear", "restrictPreciousMaterial", {
+      name: "pf2e-items-sunder-wear.settings.restrictPreciousMaterial.name",
+      hint: "pf2e-items-sunder-wear.settings.restrictPreciousMaterial.hint",
       scope: "world",
       config: true,
       type: Boolean,
       default: false,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "injectSunderButton", {
-      name: "pf2e-aztecs-sundered.settings.injectSunderButton.name",
-      hint: "pf2e-aztecs-sundered.settings.injectSunderButton.hint",
+   game.settings.register("pf2e-items-sunder-wear", "injectSunderButton", {
+      name: "pf2e-items-sunder-wear.settings.injectSunderButton.name",
+      hint: "pf2e-items-sunder-wear.settings.injectSunderButton.hint",
       scope: "world",
       config: true,
       type: Boolean,
       default: true,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "allowPlayersSunderButton", {
-      name: "pf2e-aztecs-sundered.settings.allowPlayersSunderButton.name",
-      hint: "pf2e-aztecs-sundered.settings.allowPlayersSunderButton.hint",
+   game.settings.register("pf2e-items-sunder-wear", "allowPlayersSunderButton", {
+      name: "pf2e-items-sunder-wear.settings.allowPlayersSunderButton.name",
+      hint: "pf2e-items-sunder-wear.settings.allowPlayersSunderButton.hint",
       scope: "world",
       config: true,
       type: Boolean,
@@ -281,90 +281,90 @@ export const registerSettings = () => {
     * reload is required — the next trigger simply uses the new numbers.
     * -------------------------------------------------------------------- */
 
-   game.settings.register("pf2e-aztecs-sundered", "enableWearSystem", {
-      name: "pf2e-aztecs-sundered.settings.enableWearSystem.name",
-      hint: "pf2e-aztecs-sundered.settings.enableWearSystem.hint",
+   game.settings.register("pf2e-items-sunder-wear", "enableWearSystem", {
+      name: "pf2e-items-sunder-wear.settings.enableWearSystem.name",
+      hint: "pf2e-items-sunder-wear.settings.enableWearSystem.hint",
       scope: "world",
       config: true,
       type: Boolean,
       default: false,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "enableWeaponWear", {
-      name: "pf2e-aztecs-sundered.settings.enableWeaponWear.name",
-      hint: "pf2e-aztecs-sundered.settings.enableWeaponWear.hint",
+   game.settings.register("pf2e-items-sunder-wear", "enableWeaponWear", {
+      name: "pf2e-items-sunder-wear.settings.enableWeaponWear.name",
+      hint: "pf2e-items-sunder-wear.settings.enableWeaponWear.hint",
       scope: "world",
       config: true,
       type: Boolean,
       default: true,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "enableArmourWear", {
-      name: "pf2e-aztecs-sundered.settings.enableArmourWear.name",
-      hint: "pf2e-aztecs-sundered.settings.enableArmourWear.hint",
+   game.settings.register("pf2e-items-sunder-wear", "enableArmourWear", {
+      name: "pf2e-items-sunder-wear.settings.enableArmourWear.name",
+      hint: "pf2e-items-sunder-wear.settings.enableArmourWear.hint",
       scope: "world",
       config: true,
       type: Boolean,
       default: true,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "wearFullRepair", {
-      name: "pf2e-aztecs-sundered.settings.wearFullRepair.name",
-      hint: "pf2e-aztecs-sundered.settings.wearFullRepair.hint",
+   game.settings.register("pf2e-items-sunder-wear", "wearFullRepair", {
+      name: "pf2e-items-sunder-wear.settings.wearFullRepair.name",
+      hint: "pf2e-items-sunder-wear.settings.wearFullRepair.hint",
       scope: "world",
       config: true,
       type: Boolean,
       default: true,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "wearDamageFormula", {
-      name: "pf2e-aztecs-sundered.settings.wearDamageFormula.name",
-      hint: "pf2e-aztecs-sundered.settings.wearDamageFormula.hint",
+   game.settings.register("pf2e-items-sunder-wear", "wearDamageFormula", {
+      name: "pf2e-items-sunder-wear.settings.wearDamageFormula.name",
+      hint: "pf2e-items-sunder-wear.settings.wearDamageFormula.hint",
       scope: "world",
       config: true,
       type: String,
       default: "1d4",
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "wearBrokenStrikeCost", {
-      name: "pf2e-aztecs-sundered.settings.wearBrokenStrikeCost.name",
-      hint: "pf2e-aztecs-sundered.settings.wearBrokenStrikeCost.hint",
+   game.settings.register("pf2e-items-sunder-wear", "wearBrokenStrikeCost", {
+      name: "pf2e-items-sunder-wear.settings.wearBrokenStrikeCost.name",
+      hint: "pf2e-items-sunder-wear.settings.wearBrokenStrikeCost.hint",
       scope: "world",
       config: true,
       type: Number,
       default: 1,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "wearWeaponDivisor", {
-      name: "pf2e-aztecs-sundered.settings.wearWeaponDivisor.name",
-      hint: "pf2e-aztecs-sundered.settings.wearWeaponDivisor.hint",
+   game.settings.register("pf2e-items-sunder-wear", "wearWeaponDivisor", {
+      name: "pf2e-items-sunder-wear.settings.wearWeaponDivisor.name",
+      hint: "pf2e-items-sunder-wear.settings.wearWeaponDivisor.hint",
       scope: "world",
       config: true,
       type: Number,
       default: 40,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "wearArmourDivisor", {
-      name: "pf2e-aztecs-sundered.settings.wearArmourDivisor.name",
-      hint: "pf2e-aztecs-sundered.settings.wearArmourDivisor.hint",
+   game.settings.register("pf2e-items-sunder-wear", "wearArmourDivisor", {
+      name: "pf2e-items-sunder-wear.settings.wearArmourDivisor.name",
+      hint: "pf2e-items-sunder-wear.settings.wearArmourDivisor.hint",
       scope: "world",
       config: true,
       type: Number,
       default: 80,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "wearWeaponBtPercent", {
-      name: "pf2e-aztecs-sundered.settings.wearWeaponBtPercent.name",
-      hint: "pf2e-aztecs-sundered.settings.wearWeaponBtPercent.hint",
+   game.settings.register("pf2e-items-sunder-wear", "wearWeaponBtPercent", {
+      name: "pf2e-items-sunder-wear.settings.wearWeaponBtPercent.name",
+      hint: "pf2e-items-sunder-wear.settings.wearWeaponBtPercent.hint",
       scope: "world",
       config: true,
       type: Number,
       default: 25,
    })
 
-   game.settings.register("pf2e-aztecs-sundered", "wearArmourBtPercent", {
-      name: "pf2e-aztecs-sundered.settings.wearArmourBtPercent.name",
-      hint: "pf2e-aztecs-sundered.settings.wearArmourBtPercent.hint",
+   game.settings.register("pf2e-items-sunder-wear", "wearArmourBtPercent", {
+      name: "pf2e-items-sunder-wear.settings.wearArmourBtPercent.name",
+      hint: "pf2e-items-sunder-wear.settings.wearArmourBtPercent.hint",
       scope: "world",
       config: true,
       type: Number,
@@ -377,31 +377,31 @@ Hooks.on("renderSettingsConfig", (app, htmlData) => {
 
    const toggleUIDependencies = () => {
       const showInventoryUI = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showInventoryUI"]',
+         'input[name="pf2e-items-sunder-wear.showInventoryUI"]',
       )
       const showInventoryUIPlayers = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showInventoryUI_players"]',
+         'input[name="pf2e-items-sunder-wear.showInventoryUI_players"]',
       )
 
       const showDamageUI = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showDamageButtonUI"]',
+         'input[name="pf2e-items-sunder-wear.showDamageButtonUI"]',
       )
       const showDamageUIPlayers = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showDamageButtonUI_players"]',
+         'input[name="pf2e-items-sunder-wear.showDamageButtonUI_players"]',
       )
 
       const showTrackUI = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showTrackDurabilityButtonUI"]',
+         'input[name="pf2e-items-sunder-wear.showTrackDurabilityButtonUI"]',
       )
       const showTrackUIPlayers = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showTrackDurabilityButtonUI_players"]',
+         'input[name="pf2e-items-sunder-wear.showTrackDurabilityButtonUI_players"]',
       )
 
       const showRepairUI = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showRepairButtonUI"]',
+         'input[name="pf2e-items-sunder-wear.showRepairButtonUI"]',
       )
       const showRepairUIPlayers = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.showRepairButtonUI_players"]',
+         'input[name="pf2e-items-sunder-wear.showRepairButtonUI_players"]',
       )
 
       if (!showInventoryUI) return
@@ -429,13 +429,13 @@ Hooks.on("renderSettingsConfig", (app, htmlData) => {
 
    const toggleDependencies = () => {
       const armourPotency = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.suppressArmourPotency"]',
+         'input[name="pf2e-items-sunder-wear.suppressArmourPotency"]',
       )
       const armourResilient = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.suppressArmourResilient"]',
+         'input[name="pf2e-items-sunder-wear.suppressArmourResilient"]',
       )
       const armourProperty = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.suppressArmourProperty"]',
+         'input[name="pf2e-items-sunder-wear.suppressArmourProperty"]',
       )
 
       if (armourPotency && armourResilient && armourProperty) {
@@ -451,13 +451,13 @@ Hooks.on("renderSettingsConfig", (app, htmlData) => {
       }
 
       const weaponPotency = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.suppressWeaponPotency"]',
+         'input[name="pf2e-items-sunder-wear.suppressWeaponPotency"]',
       )
       const weaponStriking = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.suppressWeaponStriking"]',
+         'input[name="pf2e-items-sunder-wear.suppressWeaponStriking"]',
       )
       const weaponProperty = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.suppressWeaponProperty"]',
+         'input[name="pf2e-items-sunder-wear.suppressWeaponProperty"]',
       )
 
       if (weaponPotency && weaponStriking && weaponProperty) {
@@ -478,7 +478,7 @@ Hooks.on("renderSettingsConfig", (app, htmlData) => {
    // settings sheet short for tables that never enable the system.
    const toggleWearDependencies = () => {
       const master = html.querySelector(
-         'input[name="pf2e-aztecs-sundered.enableWearSystem"]',
+         'input[name="pf2e-items-sunder-wear.enableWearSystem"]',
       )
       if (!master) return
 
@@ -496,7 +496,7 @@ Hooks.on("renderSettingsConfig", (app, htmlData) => {
 
       dependants.forEach((key) => {
          const input = html.querySelector(
-            `[name="pf2e-aztecs-sundered.${key}"]`,
+            `[name="pf2e-items-sunder-wear.${key}"]`,
          )
          const group = input?.closest(".form-group")
          if (group) group.style.display = master.checked ? "" : "none"
@@ -508,13 +508,13 @@ Hooks.on("renderSettingsConfig", (app, htmlData) => {
    toggleWearDependencies()
 
    html.addEventListener("change", (e) => {
-      if (e.target.name === "pf2e-aztecs-sundered.enableWearSystem") {
+      if (e.target.name === "pf2e-items-sunder-wear.enableWearSystem") {
          toggleWearDependencies()
-      } else if (e.target.name.startsWith("pf2e-aztecs-sundered.show")) {
+      } else if (e.target.name.startsWith("pf2e-items-sunder-wear.show")) {
          toggleUIDependencies()
       } else if (
-         e.target.name === "pf2e-aztecs-sundered.suppressArmourPotency" ||
-         e.target.name === "pf2e-aztecs-sundered.suppressWeaponPotency"
+         e.target.name === "pf2e-items-sunder-wear.suppressArmourPotency" ||
+         e.target.name === "pf2e-items-sunder-wear.suppressWeaponPotency"
       ) {
          toggleDependencies()
       }

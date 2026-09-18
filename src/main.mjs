@@ -9,7 +9,7 @@ import { SunderApp } from "./apps/sunder-app.mjs"
 
 Hooks.once("init", () => {
    registerSettings()
-   game.modules.get("pf2e-aztecs-sundered").api = {
+   game.modules.get("pf2e-items-sunder-wear").api = {
       launchSunderMacro: (actor, data, preselectedId) =>
          new SunderApp({
             actor,

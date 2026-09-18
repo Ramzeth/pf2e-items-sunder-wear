@@ -17,7 +17,7 @@ export class NpcPenaltyApp extends HandlebarsApplicationMixin(ApplicationV2) {
       id: "npc-penalty-app",
       classes: ["pf2e"],
       position: { width: 450, height: "auto" },
-      window: { title: "pf2e-aztecs-sundered.dialog.npc.app-title" },
+      window: { title: "pf2e-items-sunder-wear.dialog.npc.app-title" },
       actions: {
          apply: this._onApply,
       },
@@ -25,7 +25,7 @@ export class NpcPenaltyApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
    static PARTS = {
       main: {
-         template: "modules/pf2e-aztecs-sundered/templates/npc-dialog.hbs",
+         template: "modules/pf2e-items-sunder-wear/templates/npc-dialog.hbs",
       },
    }
 
@@ -39,7 +39,7 @@ export class NpcPenaltyApp extends HandlebarsApplicationMixin(ApplicationV2) {
                activeArmorProps.push({
                   key: prop,
                   label: game.i18n.localize(
-                     `pf2e-aztecs-sundered.armor-property.${prop}.label`,
+                     `pf2e-items-sunder-wear.armor-property.${prop}.label`,
                   ),
                })
          })
@@ -49,13 +49,13 @@ export class NpcPenaltyApp extends HandlebarsApplicationMixin(ApplicationV2) {
                activeWeaponProps.push({
                   key: prop,
                   label: game.i18n.localize(
-                     `pf2e-aztecs-sundered.weapon-property.${prop}.label`,
+                     `pf2e-items-sunder-wear.weapon-property.${prop}.label`,
                   ),
                })
          })
       }
 
-      this.options.window.title = `${game.i18n.localize("pf2e-aztecs-sundered.dialog.npc.title")}: ${this.item.name}`
+      this.options.window.title = `${game.i18n.localize("pf2e-items-sunder-wear.dialog.npc.title")}: ${this.item.name}`
 
       return {
          item: this.item,

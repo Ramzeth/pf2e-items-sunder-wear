@@ -48,7 +48,7 @@ import {
    getWearProfile,
 } from "../wear.mjs"
 
-const MODULE_ID = "pf2e-aztecs-sundered"
+const MODULE_ID = "pf2e-items-sunder-wear"
 
 /**
  * Layer 2 of 3. Find the card recording that this fumble has already been
@@ -337,10 +337,10 @@ export function registerWearHooks() {
           * the roll wording wins — a die really is coming, and the extra
           * point is the card's business to explain. */
          const label = rolled
-            ? game.i18n.format("pf2e-aztecs-sundered.chat.wear.roll-button", {
+            ? game.i18n.format("pf2e-items-sunder-wear.chat.wear.roll-button", {
                  itemName: item.name,
               })
-            : game.i18n.format("pf2e-aztecs-sundered.chat.wear.flat-button", {
+            : game.i18n.format("pf2e-items-sunder-wear.chat.wear.flat-button", {
                  itemName: item.name,
                  flat,
               })
@@ -481,7 +481,7 @@ async function onWearButton(event) {
 /** The lines under the die in the wear card. */
 function buildWearFlavor(weapon, result) {
    const line = (key, data) =>
-      game.i18n.format(`pf2e-aztecs-sundered.chat.wear.${key}`, data)
+      game.i18n.format(`pf2e-items-sunder-wear.chat.wear.${key}`, data)
 
    const lines = [`<strong>${line("flavor", { itemName: weapon.name })}</strong>`]
 

@@ -9,7 +9,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
       super(options)
       this.actor = options.actor
       this.effectItem = options.effectItem
-      this.itemFlags = this.effectItem.flags["pf2e-aztecs-sundered"] || {}
+      this.itemFlags = this.effectItem.flags["pf2e-items-sunder-wear"] || {}
       this.targetItem = this.actor.items.get(this.itemFlags.itemId)
    }
 
@@ -17,7 +17,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
       id: "persistent-item-damage-app",
       classes: ["pf2e"],
       position: { width: 450, height: "auto" },
-      window: { title: "pf2e-aztecs-sundered.dialog.persistent.app-title" },
+      window: { title: "pf2e-items-sunder-wear.dialog.persistent.app-title" },
       actions: {
          damage: this._onDamage,
          recovery: this._onRecovery,
@@ -28,7 +28,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
    static PARTS = {
       main: {
          template:
-            "modules/pf2e-aztecs-sundered/templates/persistent-dialog.hbs",
+            "modules/pf2e-items-sunder-wear/templates/persistent-dialog.hbs",
       },
    }
 
@@ -100,7 +100,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
       let initialNetDmg = Math.max(0, adjustedDmg - this.baseHd)
 
       this.options.window.title = game.i18n.format(
-         "pf2e-aztecs-sundered.dialog.persistent.title",
+         "pf2e-items-sunder-wear.dialog.persistent.title",
          { actorName: this.actor.name },
       )
 
@@ -161,7 +161,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
       await this.targetItem.update(updates)
 
       let chatContent = game.i18n.format(
-         "pf2e-aztecs-sundered.chat.persistent.content",
+         "pf2e-items-sunder-wear.chat.persistent.content",
          {
             itemName: this.targetItem.name,
             damage: netDmg,
@@ -192,13 +192,13 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
       const success = roll.total >= dc
 
       const checkLabel = game.i18n.localize(
-         "pf2e-aztecs-sundered.chat.persistent.recovery-check",
+         "pf2e-items-sunder-wear.chat.persistent.recovery-check",
       )
       const successMsg = game.i18n.localize(
-         "pf2e-aztecs-sundered.chat.persistent.recovery-success",
+         "pf2e-items-sunder-wear.chat.persistent.recovery-success",
       )
       const failureMsg = game.i18n.localize(
-         "pf2e-aztecs-sundered.chat.persistent.recovery-failure",
+         "pf2e-items-sunder-wear.chat.persistent.recovery-failure",
       )
 
       await roll.toMessage({
@@ -214,7 +214,7 @@ export class PersistentItemDamageApp extends HandlebarsApplicationMixin(
       await this.effectItem.delete()
       ui.notifications.info(
          game.i18n.format(
-            "pf2e-aztecs-sundered.notifications.persistent-ended",
+            "pf2e-items-sunder-wear.notifications.persistent-ended",
             {
                itemName: this.targetItem.name,
             },

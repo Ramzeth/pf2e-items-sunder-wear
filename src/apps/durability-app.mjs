@@ -26,7 +26,7 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
       id: "durability-config-app",
       classes: ["pf2e"],
       position: { width: 350, height: "auto" },
-      window: { title: "pf2e-aztecs-sundered.dialog.durability.config-title" },
+      window: { title: "pf2e-items-sunder-wear.dialog.durability.config-title" },
       actions: {
          save: this._onSave,
          repair: this._onRepair,
@@ -37,7 +37,7 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
    static PARTS = {
       main: {
          template:
-            "modules/pf2e-aztecs-sundered/templates/durability-dialog.hbs",
+            "modules/pf2e-items-sunder-wear/templates/durability-dialog.hbs",
       },
    }
 
@@ -85,7 +85,7 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
          ([keyName, values]) => ({
             key: keyName,
             name: game.i18n.localize(
-               `pf2e-aztecs-sundered.material-stats.${keyName}.name`,
+               `pf2e-items-sunder-wear.material-stats.${keyName}.name`,
             ),
             selected: keyName === assignedMaterial,
          }),
@@ -160,7 +160,7 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
          btn.className = "durability-save-btn"
          btn.style.marginTop = "10px"
          btn.dataset.action = "save"
-         btn.innerHTML = `<i class="fa-solid fa-save"></i> ${game.i18n.localize("pf2e-aztecs-sundered.dialog.durability.save")}`
+         btn.innerHTML = `<i class="fa-solid fa-save"></i> ${game.i18n.localize("pf2e-items-sunder-wear.dialog.durability.save")}`
          el.querySelector(".aztec-durability-summary")?.appendChild(btn) ||
             el.appendChild(btn)
       }
@@ -217,7 +217,7 @@ export class DurabilityApp extends HandlebarsApplicationMixin(ApplicationV2) {
                select.value = ""
                return ui.notifications.warn(
                   game.i18n.localize(
-                     "pf2e-aztecs-sundered.notifications.trait-assigned",
+                     "pf2e-items-sunder-wear.notifications.trait-assigned",
                   ),
                )
             }

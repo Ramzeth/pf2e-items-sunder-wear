@@ -1,6 +1,6 @@
 <div class="dialog-content">
    <div style="margin-bottom: 10px;">{{localize
-         "pf2e-aztecs-sundered.dialog.npc.select-penalty"
+         "pf2e-items-sunder-wear.dialog.npc.select-penalty"
          itemName=item.name
       }}.</div>
    {{#if isDestroyed}}
@@ -9,7 +9,7 @@
          style="background: rgba(255,0,0,0.1); padding: 5px; border: 1px solid red; margin-bottom: 10px;"
       >
          <label style="color: darkred;">{{localize
-               "pf2e-aztecs-sundered.dialog.npc.penalties.full-destruction"
+               "pf2e-items-sunder-wear.dialog.npc.penalties.full-destruction"
             }}</label>
          <div class="form-fields">
             <input type="checkbox" id="npc-full-destruction" checked />
@@ -19,7 +19,7 @@
    {{#if isArmor}}
       <div class="form-group">
          <label>{{localize
-               "pf2e-aztecs-sundered.dialog.npc.penalties.ac"
+               "pf2e-items-sunder-wear.dialog.npc.penalties.ac"
             }}</label>
          <div class="form-fields"><input
                type="number"
@@ -33,14 +33,14 @@
       >
          <button type="button" data-action="apply" style="width: 50%;">
             <i class="fa-solid fa-check"></i>
-            {{localize "pf2e-aztecs-sundered.dialog.npc.apply-penalties"}}
+            {{localize "pf2e-items-sunder-wear.dialog.npc.apply-penalties"}}
          </button>
       </div>
 
       {{#if hasResilient}}
          <div class="form-group">
             <label>{{localize
-                  "pf2e-aztecs-sundered.dialog.npc.penalties.resilient"
+                  "pf2e-items-sunder-wear.dialog.npc.penalties.resilient"
                }}
                (+{{runes.resilient}})</label>
             <div class="form-fields"><input
@@ -64,7 +64,7 @@
    {{else}}
       <div class="form-group">
          <label>{{localize
-               "pf2e-aztecs-sundered.dialog.npc.penalties.attack-damage"
+               "pf2e-items-sunder-wear.dialog.npc.penalties.attack-damage"
             }}</label>
          <div class="form-fields"><input
                type="number"
@@ -78,14 +78,14 @@
       >
          <button type="button" data-action="apply" style="width: 50%;">
             <i class="fa-solid fa-check"></i>
-            {{localize "pf2e-aztecs-sundered.dialog.npc.apply-penalties"}}
+            {{localize "pf2e-items-sunder-wear.dialog.npc.apply-penalties"}}
          </button>
       </div>
 
       {{#if hasStriking}}
          <div class="form-group">
             <label>{{localize
-                  "pf2e-aztecs-sundered.dialog.npc.penalties.striking"
+                  "pf2e-items-sunder-wear.dialog.npc.penalties.striking"
                }}</label>
             <div class="form-fields"><input
                   type="checkbox"

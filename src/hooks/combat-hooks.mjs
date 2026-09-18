@@ -12,7 +12,7 @@ export function registerCombatHooks() {
       const persistentEffects = currentCombatant.actor.items.filter(
          (item) =>
             item.type === "effect" &&
-            item.flags?.["pf2e-aztecs-sundered"]?.isPersistentDamage,
+            item.flags?.["pf2e-items-sunder-wear"]?.isPersistentDamage,
       )
 
       if (persistentEffects.length > 0) {

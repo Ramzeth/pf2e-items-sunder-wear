@@ -18,7 +18,7 @@ export function registerSheetHooks() {
          <hr>
 <div class="form-group durability-config-group">
               <div class="form-fields">
-                  <a class="open-durability-config" style="cursor: pointer;"><i class="fa-solid fa-helmet-battle"></i> ${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.durability-config")}</a>
+                  <a class="open-durability-config" style="cursor: pointer;"><i class="fa-solid fa-helmet-battle"></i> ${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.durability-config")}</a>
               </div>
           </div>`
          priceGroup.after(configHtml)
@@ -35,7 +35,7 @@ export function registerSheetHooks() {
       }
 
       if (item.type === "weapon" || item.type === "armor") {
-         let preciousMaterialCheckbox = `<div class="form-group"><label>${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.use-precious")}</label><input type="checkbox" name="flags.world.usePreciousMaterial" data-dtype="Boolean" ${item.getFlag("world", "usePreciousMaterial") !== false ? "checked" : ""}></div>`
+         let preciousMaterialCheckbox = `<div class="form-group"><label>${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.use-precious")}</label><input type="checkbox" name="flags.world.usePreciousMaterial" data-dtype="Boolean" ${item.getFlag("world", "usePreciousMaterial") !== false ? "checked" : ""}></div>`
          let specificSystemInput = html.find('input[name="system.specific"]')
          let materialTypeSelect = html.find(
             'select[name="system.material.type"]',
@@ -68,11 +68,11 @@ export function registerSheetHooks() {
 
       const isGM = game.user.isGM
       const showMain = game.settings.get(
-         "pf2e-aztecs-sundered",
+         "pf2e-items-sunder-wear",
          "showInventoryUI",
       )
       const showMainPlayers = game.settings.get(
-         "pf2e-aztecs-sundered",
+         "pf2e-items-sunder-wear",
          "showInventoryUI_players",
       )
 
@@ -80,27 +80,27 @@ export function registerSheetHooks() {
       if (isGM && !showMain) return
 
       const showSunder =
-         game.settings.get("pf2e-aztecs-sundered", "showDamageButtonUI") &&
+         game.settings.get("pf2e-items-sunder-wear", "showDamageButtonUI") &&
          (isGM ||
             game.settings.get(
-               "pf2e-aztecs-sundered",
+               "pf2e-items-sunder-wear",
                "showDamageButtonUI_players",
             ))
       const showRepair =
-         game.settings.get("pf2e-aztecs-sundered", "showRepairButtonUI") &&
+         game.settings.get("pf2e-items-sunder-wear", "showRepairButtonUI") &&
          (isGM ||
             game.settings.get(
-               "pf2e-aztecs-sundered",
+               "pf2e-items-sunder-wear",
                "showRepairButtonUI_players",
             ))
       const showTrack =
          game.settings.get(
-            "pf2e-aztecs-sundered",
+            "pf2e-items-sunder-wear",
             "showTrackDurabilityButtonUI",
          ) &&
          (isGM ||
             game.settings.get(
-               "pf2e-aztecs-sundered",
+               "pf2e-items-sunder-wear",
                "showTrackDurabilityButtonUI_players",
             ))
 
@@ -152,18 +152,18 @@ export function registerSheetHooks() {
             // repair limit — that gap IS the accumulated fatigue.
             let baseNote =
                base > repairLimit
-                  ? ` (${game.i18n.localize("pf2e-aztecs-sundered.dialog.durability.base")}: ${base})`
+                  ? ` (${game.i18n.localize("pf2e-items-sunder-wear.dialog.durability.base")}: ${base})`
                   : ""
-            let tooltip = `${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.open-durability-config")}<br>${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.hp")}: ${currentHitPoints} / ${repairLimit}${baseNote}<br>${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.hardness")}: ${itemHardness}`
+            let tooltip = `${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.open-durability-config")}<br>${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.hp")}: ${currentHitPoints} / ${repairLimit}${baseNote}<br>${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.hardness")}: ${itemHardness}`
 
             let iconHtml = `<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px;">
                 <a class="aztec-action-btn" data-aztec-action="durability" data-item-id="${item.id}" data-tooltip="${tooltip.replace(/"/g, "&quot;")}"><i class="fa-solid fa-helmet-battle"></i></a>`
 
             if (showSunder) {
-               iconHtml += `\n<a class="aztec-action-btn" data-aztec-action="sunder" data-item-id="${item.id}" data-tooltip="${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.strike-item").replace(/"/g, "&quot;")}"><i class="fa-solid fa-hammer-crash"></i></a>`
+               iconHtml += `\n<a class="aztec-action-btn" data-aztec-action="sunder" data-item-id="${item.id}" data-tooltip="${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.strike-item").replace(/"/g, "&quot;")}"><i class="fa-solid fa-hammer-crash"></i></a>`
             }
             if (showRepair) {
-               iconHtml += `\n<a class="aztec-action-btn" data-aztec-action="repair" data-item-id="${item.id}" data-tooltip="${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.repair-item").replace(/"/g, "&quot;")}"><i class="fa-solid fa-wrench"></i></a>`
+               iconHtml += `\n<a class="aztec-action-btn" data-aztec-action="repair" data-item-id="${item.id}" data-tooltip="${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.repair-item").replace(/"/g, "&quot;")}"><i class="fa-solid fa-wrench"></i></a>`
             }
             iconHtml += `</span>`
             nameElement.append(iconHtml)
@@ -171,7 +171,7 @@ export function registerSheetHooks() {
             if (repairLimit > 0) {
                if (currentHitPoints <= 0) {
                   nameElement.prepend(
-                     `<i class="fa-solid fa-skull" style="color: #555;" data-tooltip="${game.i18n.localize("pf2e-aztecs-sundered.status.destroyed")}"></i>`,
+                     `<i class="fa-solid fa-skull" style="color: #555;" data-tooltip="${game.i18n.localize("pf2e-items-sunder-wear.status.destroyed")}"></i>`,
                   )
                   nameElement.css({ opacity: "0.5", filter: "grayscale(100%)" })
                   itemRow
@@ -180,14 +180,14 @@ export function registerSheetHooks() {
                      .css({ opacity: "0.5", filter: "grayscale(100%)" })
                } else if (currentHitPoints <= brokenThreshold) {
                   nameElement.prepend(
-                     `<i class="fa-solid fa-heart-crack" style="color: #a83232;" data-tooltip="${game.i18n.localize("pf2e-aztecs-sundered.status.broken")}"></i>`,
+                     `<i class="fa-solid fa-heart-crack" style="color: #a83232;" data-tooltip="${game.i18n.localize("pf2e-items-sunder-wear.status.broken")}"></i>`,
                   )
                }
             }
          } else if (showTrack) {
             let tooltip =
                game.i18n.localize(
-                  "pf2e-aztecs-sundered.sheet-text.track-durability",
+                  "pf2e-items-sunder-wear.sheet-text.track-durability",
                ) || "Track Durability"
 
             let iconHtml = `

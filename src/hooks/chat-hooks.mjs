@@ -1,10 +1,10 @@
 export function registerChatHooks() {
    Hooks.on("renderChatMessageHTML", (message, htmlElement, data) => {
-      if (!game.settings.get("pf2e-aztecs-sundered", "injectSunderButton"))
+      if (!game.settings.get("pf2e-items-sunder-wear", "injectSunderButton"))
          return
       if (
          !game.user.isGM &&
-         !game.settings.get("pf2e-aztecs-sundered", "allowPlayersSunderButton")
+         !game.settings.get("pf2e-items-sunder-wear", "allowPlayersSunderButton")
       )
          return
       if (!message.isDamageRoll) return
@@ -125,9 +125,9 @@ export function registerChatHooks() {
       }
 
       let btnHtml = `
-         <button type="button" class="sunder-chat-btn" title="${game.i18n.localize("pf2e-aztecs-sundered.sheet-text.strike-item")}">
+         <button type="button" class="sunder-chat-btn" title="${game.i18n.localize("pf2e-items-sunder-wear.sheet-text.strike-item")}">
             <i class="fa-solid fa-hammer-crash fa-fw" inert=""></i>
-            <span class="label">${game.i18n.localize("pf2e-aztecs-sundered.chat.sunder-button-label")}</span>
+            <span class="label">${game.i18n.localize("pf2e-items-sunder-wear.chat.sunder-button-label")}</span>
          </button>
       `
 
@@ -152,7 +152,7 @@ export function registerChatHooks() {
             if (!targetActor)
                return ui.notifications.warn(
                   game.i18n.localize(
-                     "pf2e-aztecs-sundered.notifications.no-target",
+                     "pf2e-items-sunder-wear.notifications.no-target",
                   ),
                )
 

@@ -14,7 +14,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       id: "repair-app",
       classes: ["pf2e"],
       position: { width: 400, height: "auto" },
-      window: { title: "pf2e-aztecs-sundered.sheet-text.repair-item" },
+      window: { title: "pf2e-items-sunder-wear.sheet-text.repair-item" },
       actions: {
          repair: this._onRepair,
          requestRepair: this._onRequestRepair,
@@ -23,7 +23,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
    static PARTS = {
       main: {
-         template: "modules/pf2e-aztecs-sundered/templates/repair-dialog.hbs",
+         template: "modules/pf2e-items-sunder-wear/templates/repair-dialog.hbs",
       },
    }
 
@@ -35,7 +35,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!this.actor) {
          ui.notifications.warn(
             game.i18n.localize(
-               "pf2e-aztecs-sundered.notifications.no-actor-repair",
+               "pf2e-items-sunder-wear.notifications.no-actor-repair",
             ),
          )
          return this.close()
@@ -43,7 +43,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!this.actor.skills?.crafting) {
          ui.notifications.warn(
             game.i18n.localize(
-               "pf2e-aztecs-sundered.notifications.no-crafting-skill",
+               "pf2e-items-sunder-wear.notifications.no-crafting-skill",
             ),
          )
          return this.close()
@@ -70,7 +70,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (currentHitPoints >= repairLimit) {
          ui.notifications.info(
             game.i18n.localize(
-               "pf2e-aztecs-sundered.notifications.fully-repaired",
+               "pf2e-items-sunder-wear.notifications.fully-repaired",
             ) || "This item is already at maximum HP.",
          )
          return this.close()
@@ -87,12 +87,12 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       )
 
       const rankNames = [
-         game.i18n.localize("pf2e-aztecs-sundered.ranks.untrained") ||
+         game.i18n.localize("pf2e-items-sunder-wear.ranks.untrained") ||
             "Untrained",
-         game.i18n.localize("pf2e-aztecs-sundered.ranks.trained") || "Trained",
-         game.i18n.localize("pf2e-aztecs-sundered.ranks.expert") || "Expert",
-         game.i18n.localize("pf2e-aztecs-sundered.ranks.master") || "Master",
-         game.i18n.localize("pf2e-aztecs-sundered.ranks.legendary") ||
+         game.i18n.localize("pf2e-items-sunder-wear.ranks.trained") || "Trained",
+         game.i18n.localize("pf2e-items-sunder-wear.ranks.expert") || "Expert",
+         game.i18n.localize("pf2e-items-sunder-wear.ranks.master") || "Master",
+         game.i18n.localize("pf2e-items-sunder-wear.ranks.legendary") ||
             "Legendary",
       ]
 
@@ -123,7 +123,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       let { baseHeal, critHeal } = this._getHealingValues(baseCraftingRank)
 
       let restoresInfo = game.i18n.format(
-         "pf2e-aztecs-sundered.dialog.repair.restores-info",
+         "pf2e-items-sunder-wear.dialog.repair.restores-info",
          { baseHeal, critHeal },
       )
       if (restoresInfo.includes("dialog.repair.restores-info")) {
@@ -152,7 +152,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
          let { baseHeal, critHeal } = this._getHealingValues(selectedRank)
 
          let updatedInfo = game.i18n.format(
-            "pf2e-aztecs-sundered.dialog.repair.restores-info",
+            "pf2e-items-sunder-wear.dialog.repair.restores-info",
             { baseHeal, critHeal },
          )
          if (updatedInfo.includes("dialog.repair.restores-info"))
@@ -194,7 +194,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const townOnly = profile ? profile.bt > this.repairLimit - 1 : false
 
       const line = (key, data) =>
-         game.i18n.format(`pf2e-aztecs-sundered.chat.repair-request.${key}`, data)
+         game.i18n.format(`pf2e-items-sunder-wear.chat.repair-request.${key}`, data)
 
       const lines = [
          `<strong>${line("header", { itemName: this.item.name })}</strong>`,
@@ -214,7 +214,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
          speaker: ChatMessage.getSpeaker({ actor: this.actor }),
          content: `<div class="pf2e chat-card"><header class="card-header flexrow"><img src="${this.item.img}" width="36" height="36"></header><div class="card-content">${lines.join("<br>")}</div></div>`,
          flags: {
-            "pf2e-aztecs-sundered": {
+            "pf2e-items-sunder-wear": {
                repairRequest: {
                   itemUuid: this.item.uuid,
                   itemName: this.item.name,
@@ -305,25 +305,25 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
             let outcomeTextMap = {
                criticalSuccess:
                   game.i18n.localize(
-                     "pf2e-aztecs-sundered.outcomes.critical-success",
+                     "pf2e-items-sunder-wear.outcomes.critical-success",
                   ) || "Critical Success",
                success:
-                  game.i18n.localize("pf2e-aztecs-sundered.outcomes.success") ||
+                  game.i18n.localize("pf2e-items-sunder-wear.outcomes.success") ||
                   "Success",
                failure:
-                  game.i18n.localize("pf2e-aztecs-sundered.outcomes.failure") ||
+                  game.i18n.localize("pf2e-items-sunder-wear.outcomes.failure") ||
                   "Failure",
                criticalFailure:
                   game.i18n.localize(
-                     "pf2e-aztecs-sundered.outcomes.critical-failure",
+                     "pf2e-items-sunder-wear.outcomes.critical-failure",
                   ) || "Critical Failure",
             }
             let rolledFallback =
-               game.i18n.localize("pf2e-aztecs-sundered.outcomes.rolled") ||
+               game.i18n.localize("pf2e-items-sunder-wear.outcomes.rolled") ||
                "Rolled"
 
             let titleBase = game.i18n.format(
-               "pf2e-aztecs-sundered.chat.repair.header",
+               "pf2e-items-sunder-wear.chat.repair.header",
                { itemName: this.item.name },
             )
             if (titleBase.includes("chat.repair.header"))
@@ -333,8 +333,8 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
                amountHealed !== 0
                   ? game.i18n.format(
                        amountHealed > 0
-                          ? "pf2e-aztecs-sundered.chat.repair.healed"
-                          : "pf2e-aztecs-sundered.chat.repair.damaged",
+                          ? "pf2e-items-sunder-wear.chat.repair.healed"
+                          : "pf2e-items-sunder-wear.chat.repair.damaged",
                        {
                           amount: Math.abs(
                              newlyCalculatedHitPoints - this.currentHitPoints,
@@ -342,7 +342,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
                        },
                     )
                   : game.i18n.localize(
-                       "pf2e-aztecs-sundered.chat.repair.no-hp-restored",
+                       "pf2e-items-sunder-wear.chat.repair.no-hp-restored",
                     ) || "No HP restored"
 
             if (amountText.includes("chat.repair")) {
@@ -354,7 +354,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
             let currentHpLabel =
                game.i18n.localize(
-                  "pf2e-aztecs-sundered.chat.repair.current-hp",
+                  "pf2e-items-sunder-wear.chat.repair.current-hp",
                ) || "Current HP"
 
             ChatMessage.create({

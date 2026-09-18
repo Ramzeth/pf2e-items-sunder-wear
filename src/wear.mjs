@@ -24,7 +24,7 @@
 
 import { getDefaultDurability } from "./logic.mjs"
 
-const MODULE_ID = "pf2e-aztecs-sundered"
+const MODULE_ID = "pf2e-items-sunder-wear"
 
 /**
  * Read an item's pristine base — the HP it had when it left the forge, and the

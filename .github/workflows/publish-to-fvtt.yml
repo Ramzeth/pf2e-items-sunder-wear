@@ -1,13 +1,34 @@
-name: Publish new version to foundry
+# Publishes an already-released version to the Foundry VTT package registry.
+#
+# Deliberately manual. The module is not listed in the registry yet, and until
+# it is there is no API token to publish with. Left on the automatic release
+# trigger this would fire on every release, be rejected for want of a token,
+# and paint the repository red for no reason.
+#
+# Before the first run:
+#   1. register the package at https://foundryvtt.com/admin/packages/
+#   2. add the API token to the repository secrets as FVTT_API_TOKEN
+#      (Settings → Secrets and variables → Actions)
+#   3. run this workflow by hand from the Actions tab, giving it the tag of a
+#      GitHub release that has already been published by main.yml
+#
+# Until then nothing here runs on its own.
+name: Publish to the Foundry registry
+
 on:
-  release:
-    types: [released]
+   workflow_dispatch:
+      inputs:
+         tag:
+            description: "Tag of a published release, e.g. 1.0.0"
+            required: true
+            type: string
+
 jobs:
-  refresh-feed:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run fvtt apu
-        uses: JamesIves/fetch-api-data-action@v2
-        with:
-          endpoint: https://api.foundryvtt.com/_api/packages/release_version/
-          configuration: '{ "method": "POST", "headers": { "Content-Type": "application/json", "Authorization": "${{ secrets.FVTT_API_TOKEN }}" }, "body": { "id": "pf2e-aztecs-sundered", "dry-run": false, "release": { "version": "${{github.event.release.tag_name}}", "manifest": "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.json", "notes": "https://github.com/${{github.repository}}/releases/tag/${{github.event.release.tag_name}}", "compatibility": { "minimum": "13", "verified": "13", "maximum": "" } } } }'
+   publish:
+      runs-on: ubuntu-latest
+      steps:
+         - name: Submit the release to Foundry
+           uses: JamesIves/fetch-api-data-action@v2
+           with:
+              endpoint: https://api.foundryvtt.com/_api/packages/release_version/
+              configuration: '{ "method": "POST", "headers": { "Content-Type": "application/json", "Authorization": "${{ secrets.FVTT_API_TOKEN }}" }, "body": { "id": "pf2e-items-sunder-wear", "dry-run": false, "release": { "version": "${{ inputs.tag }}", "manifest": "https://github.com/${{github.repository}}/releases/download/${{ inputs.tag }}/module.json", "notes": "https://github.com/${{github.repository}}/releases/tag/${{ inputs.tag }}", "compatibility": { "minimum": "13", "verified": "14", "maximum": "" } } } }'

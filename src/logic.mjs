@@ -66,7 +66,7 @@ export const getDefaultDurability = (item) => {
 
       if (preciousData) {
          let restrictMaterials = game.settings.get(
-            "pf2e-aztecs-sundered",
+            "pf2e-items-sunder-wear",
             "restrictPreciousMaterial",
          )
          if (
@@ -104,7 +104,7 @@ export const applyNPCArmorPenalties = async (item, choices) => {
          value: choices.acPenalty,
          slug: isDestroyed ? "destroyed-armor-penalty" : "broken-armor-penalty",
          label: game.i18n.localize(
-            "pf2e-aztecs-sundered.rule-elements.broken.armor",
+            "pf2e-items-sunder-wear.rule-elements.broken.armor",
          ),
       })
    }
@@ -116,7 +116,7 @@ export const applyNPCArmorPenalties = async (item, choices) => {
          value: -choices.resilientVal,
          slug: isDestroyed ? "destroyed-resilient" : "broken-resilient",
          label: game.i18n.localize(
-            "pf2e-aztecs-sundered.rule-elements.broken.resilient-rune",
+            "pf2e-items-sunder-wear.rule-elements.broken.resilient-rune",
          ),
       })
    }
@@ -130,7 +130,7 @@ export const applyNPCArmorPenalties = async (item, choices) => {
             value: propertyMap.value,
             slug: isDestroyed ? `destroyed-${property}` : `broken-${property}`,
             label: game.i18n.format(
-               "pf2e-aztecs-sundered.rule-elements.broken.other-rune",
+               "pf2e-items-sunder-wear.rule-elements.broken.other-rune",
                { type: property },
             ),
          })
@@ -141,7 +141,7 @@ export const applyNPCArmorPenalties = async (item, choices) => {
             value: Math.abs(propertyMap.value),
             slug: isDestroyed ? `destroyed-${property}` : `broken-${property}`,
             label: game.i18n.format(
-               "pf2e-aztecs-sundered.rule-elements.broken.other-rune",
+               "pf2e-items-sunder-wear.rule-elements.broken.other-rune",
                { type: property },
             ),
          })
@@ -149,11 +149,11 @@ export const applyNPCArmorPenalties = async (item, choices) => {
    })
 
    let effectNameKey = isDestroyed
-      ? "pf2e-aztecs-sundered.destroyed-effect.label"
-      : "pf2e-aztecs-sundered.broken-effect.label"
+      ? "pf2e-items-sunder-wear.destroyed-effect.label"
+      : "pf2e-items-sunder-wear.broken-effect.label"
    let effectDescriptionKey = isDestroyed
-      ? "pf2e-aztecs-sundered.destroyed-effect.description"
-      : "pf2e-aztecs-sundered.broken-effect.description"
+      ? "pf2e-items-sunder-wear.destroyed-effect.description"
+      : "pf2e-items-sunder-wear.broken-effect.description"
 
    let effectData = {
       name: game.i18n.format(effectNameKey, { itemName: item.name }),
@@ -167,7 +167,7 @@ export const applyNPCArmorPenalties = async (item, choices) => {
          },
          rules: rules,
       },
-      flags: { "pf2e-aztecs-sundered": { brokenItemId: item.id } },
+      flags: { "pf2e-items-sunder-wear": { brokenItemId: item.id } },
    }
 
    await item.actor.createEmbeddedDocuments("Item", [effectData])
@@ -177,7 +177,7 @@ export const removeNPCArmorPenalties = async (item) => {
    let penaltyEffects = item.actor.items.filter(
       (effectItem) =>
          effectItem.type === "effect" &&
-         effectItem.flags?.["pf2e-aztecs-sundered"]?.brokenItemId === item.id,
+         effectItem.flags?.["pf2e-items-sunder-wear"]?.brokenItemId === item.id,
    )
    let effectIds = penaltyEffects.map((effect) => effect.id)
    if (effectIds.length > 0) {
@@ -212,7 +212,7 @@ export const applyNPCWeaponPenalties = async (item, choices) => {
             ? "destroyed-weapon-penalty"
             : "broken-weapon-penalty",
          label: game.i18n.localize(
-            "pf2e-aztecs-sundered.rule-elements.broken.weapon",
+            "pf2e-items-sunder-wear.rule-elements.broken.weapon",
          ),
       })
    }
@@ -227,7 +227,7 @@ export const applyNPCWeaponPenalties = async (item, choices) => {
          predicate: strikePredicate,
          slug: isDestroyed ? "destroyed-striking-rune" : "broken-striking-rune",
          label: game.i18n.localize(
-            "pf2e-aztecs-sundered.rule-elements.broken.striking-rune",
+            "pf2e-items-sunder-wear.rule-elements.broken.striking-rune",
          ),
       })
    }
@@ -245,7 +245,7 @@ export const applyNPCWeaponPenalties = async (item, choices) => {
                ? `destroyed-${property}-rune`
                : `broken-${property}-rune`,
             label: game.i18n.format(
-               "pf2e-aztecs-sundered.rule-elements.broken.other-rune",
+               "pf2e-items-sunder-wear.rule-elements.broken.other-rune",
                { type: property },
             ),
          })
@@ -253,11 +253,11 @@ export const applyNPCWeaponPenalties = async (item, choices) => {
    })
 
    let effectNameKey = isDestroyed
-      ? "pf2e-aztecs-sundered.destroyed-effect.label"
-      : "pf2e-aztecs-sundered.broken-effect.label"
+      ? "pf2e-items-sunder-wear.destroyed-effect.label"
+      : "pf2e-items-sunder-wear.broken-effect.label"
    let effectDescriptionKey = isDestroyed
-      ? "pf2e-aztecs-sundered.destroyed-effect.description"
-      : "pf2e-aztecs-sundered.broken-effect.description"
+      ? "pf2e-items-sunder-wear.destroyed-effect.description"
+      : "pf2e-items-sunder-wear.broken-effect.description"
 
    let effectData = {
       name: game.i18n.format(effectNameKey, { itemName: item.name }),
@@ -271,7 +271,7 @@ export const applyNPCWeaponPenalties = async (item, choices) => {
          },
          rules: rules,
       },
-      flags: { "pf2e-aztecs-sundered": { brokenItemId: item.id } },
+      flags: { "pf2e-items-sunder-wear": { brokenItemId: item.id } },
    }
 
    await item.actor.createEmbeddedDocuments("Item", [effectData])
@@ -281,7 +281,7 @@ export const removeNPCWeaponPenalties = async (item) => {
    let penaltyEffects = item.actor.items.filter(
       (effectItem) =>
          effectItem.type === "effect" &&
-         effectItem.flags?.["pf2e-aztecs-sundered"]?.brokenItemId === item.id,
+         effectItem.flags?.["pf2e-items-sunder-wear"]?.brokenItemId === item.id,
    )
    let effectIds = penaltyEffects.map((effect) => effect.id)
    if (effectIds.length > 0) {
