@@ -1,68 +1,70 @@
 # PF2e Items — Sunder & Wear
 
-Прочность предметов для Pathfinder 2e в Foundry VTT. Две половины, отражённые в названии:
+Item durability for Pathfinder 2e in Foundry VTT. Two halves, as the name says:
 
-**Sunder** — намеренное разрушение. Предметы получают HP, Hardness и материал; по ним можно бить, они ломаются и уничтожаются, сломанная экипировка накладывает положенные штрафы.
+**Sunder** — deliberate destruction. Items get HP, Hardness and a material; you can attack them, they break and are destroyed, and broken equipment applies the penalties it should.
 
-**Wear** — износ сам собой, от использования. Хоумбрю-надстройка: оружие стачивается на натуральной 1, броня — под критами по носителю, а каждый полевой ремонт навсегда понижает потолок, до которого предмет вообще можно починить. **По умолчанию выключена.**
+**Wear** — wearing out on its own, through use. A homebrew layer on top: weapons grind down on a natural 1, armour under criticals against its wearer, and every field repair permanently lowers the ceiling the item can ever be repaired to. **Off by default.**
 
-Форк [PF2e Aztec's Sundered](https://github.com/Tebesski/pf2e-aztecs-sundered) за авторством Aztec, сильно переработанный. Базовая часть — его; износ, ремонт цепочкой и всё, что вокруг Предела ремонта, добавлено здесь.
+A heavily reworked fork of [PF2e Aztec's Sundered](https://github.com/Tebesski/pf2e-aztecs-sundered) by Aztec. The base is theirs; the wear system, the repair chain and everything around the repair limit were added here.
 
-> Два модуля нельзя ставить одновременно: они пишут в одни и те же флаги предметов и дорисовывают одни и те же кнопки.
+> The two modules cannot be installed together: they write to the same item flags and inject the same buttons.
 
 ---
 
-## Установка
+## Installation
 
-Ссылка на манифест последнего релиза:
+The manifest link for the latest release:
 
 ```
 https://github.com/Ramzeth/pf2e-items-sunder-wear/releases/latest/download/module.json
 ```
 
-Вставить в поле «Manifest URL» на экране установки модулей Foundry.
+Paste it into the "Manifest URL" field on Foundry's module installation screen.
 
-Требуется система **pf2e**, Foundry **v13+**.
+Requires the **pf2e** system and Foundry **v13+**.
 
 ---
 
-## Sunder: прочность и разрушение
+## Sunder: durability and destruction
 
-- HP, Hardness и материал для оружия, брони, щитов и любого другого снаряжения
-- лестница материалов из правил, от бумаги до железной конструкции, плюс драгоценные материалы
-- окно урона по предмету: типы урона, игнорирование твёрдости, адамантин, corrosive, razing, продолжительный урон
-- иммунитеты, слабости и сопротивления на уровне предмета
-- сломанное и уничтоженное состояние со штрафами; у NPC мастер выбирает штрафы диалогом
-- кнопка разрушения прямо в карточке урона в чате
-- рюкзак при уничтожении вываливает содержимое
+- HP, Hardness and material for weapons, armour, shields and any other gear
+- the material ladder from the rules, from paper to iron structure, plus precious materials
+- an item damage window: damage types, ignoring Hardness, adamantine, corrosive, razing, persistent damage
+- immunities, weaknesses and resistances at the item level
+- broken and destroyed conditions with their penalties; for NPCs the GM picks the penalties in a dialog
+- a sunder button right in the damage card in chat
+- a destroyed backpack spills its contents
 
-## Wear: износ и усталость
+## Wear: attrition and fatigue
 
-Полные правила — **[docs/iznos-snaryazheniya.md](docs/iznos-snaryazheniya.md)**. Коротко:
+The full rules are in **[docs/iznos-snaryazheniya.md](docs/iznos-snaryazheniya.md)**. In brief:
 
-| Термин | Что это |
+| Term | What it is |
 |---|---|
-| **База** | максимум HP, каким предмет вышел из кузницы |
-| **Предел ремонта** | потолок, до которого предмет чинится сейчас; падает от полевого ремонта |
-| **ПП** | порог поломки: 25% Базы у оружия, 50% у брони |
+| **Base** | the maximum HP the item left the forge with |
+| **Repair limit** | the ceiling it can currently be repaired to; falls with every field repair |
+| **BT** | broken threshold: 25% of Base for weapons, 50% for armour |
 
-**Три триггера.** Натуральная 1 на броске атаки — оружие получает `1d4`. Критическое попадание по носителю — броня получает `1d4`. Любой удар сломанным оружием — 1 HP фиксированно.
+**Three triggers.** A natural 1 on an attack roll — the weapon takes `1d4`. A critical hit against the wearer — the armour takes `1d4`. Any strike with a broken weapon — a flat 1 HP.
 
-Ничего не применяется автоматически: на карточке атаки появляется кнопка, видимая только владельцу предмета и мастеру. Один клик катит кубик, списывает HP и печатает карточку.
+Nothing is applied automatically: a button appears on the attack card, visible only to the item's owner and the GM. One click rolls the die, deducts the HP and prints a card.
 
-**Ремонт — разговор в чате,** потому что бросок требует персонажа кузнеца, а запись HP — владельца предмета, и ни один участник не покрывает оба конца:
+**Repair is a conversation in chat,** because the roll needs the smith's character and writing HP needs the item's owner, and no one participant holds both ends:
 
 ```
-владелец публикует запрос → любой кузнец бросает своё Ремесло → владелец применяет
+the owner publishes a request → any smith rolls their own Crafting → the owner applies it
 ```
 
-Каждый успешный ремонт понижает Предел тем сильнее, чем хуже было состояние предмета. Полностью восстанавливает Предел только город — руками мастера в окне прочности.
+**The repairer chooses how finely to work.** Five grades, from Rough to Flawless, each needing a higher Crafting proficiency and adding to the DC — and each spending less of the item's future for the same hit points back. The window shows the resulting DC and what every outcome would do to the repair limit before anything is rolled. That is the reason to carry a damaged blade to somebody good rather than patch it yourself.
+
+Every successful repair lowers the limit, and the worse the item's condition was, the more it lowers it. Only a town forge restores the limit fully — by the GM's hand, in the durability window.
 
 ---
 
-## Макрос разрушения
+## The sunder macro
 
-Модуль даёт API для кнопки на панели. Создайте макрос типа Script:
+The module exposes an API for a hotbar button. Create a Script macro:
 
 ```js
 const target = canvas.tokens.controlled[0]?.actor
@@ -70,52 +72,60 @@ if (!target) return ui.notifications.warn("Select a token first.")
 game.modules.get("pf2e-items-sunder-wear").api.launchSunderMacro(target)
 ```
 
-> **На будущее:** макрос стоит положить в собственный компендиум, чтобы пользователи не создавали его руками. Не сделано потому, что компендиум в Foundry хранится только как бинарный LevelDB, а держать нечитаемый бинарь в репозитории ради четырёх строк не хотелось. Правильное решение — хранить исходник макроса текстом и собирать пак в CI через `@foundryvtt/foundryvtt-cli`.
+> **For later:** this macro belongs in a compendium of its own, so users do not have to create it by hand. It is not there because a Foundry compendium is stored only as a binary LevelDB, and keeping an unreadable binary in the repository for four lines of code was not worth it. The right answer is to keep the macro's source as text and build the pack in CI with `@foundryvtt/foundryvtt-cli`.
 
 ---
 
-## Настройки
+## Settings
 
-Всё, что касается износа, живёт под главным тумблером **«Включить износ снаряжения»**, выключенным по умолчанию. Пока он выключен, модуль ведёт себя как базовый: порог поломки снова 50% от максимума, лишних полей и флагов на предметах нет.
+Everything to do with wear lives under the master switch **"Enable equipment wear"**, which is off by default. While it is off the module behaves like the base one: the broken threshold is 50% of maximum again, and there are no extra fields or flags on items.
 
-Отдельно настраиваются: формула урона износа, цена удара сломанным оружием, делители усталости и проценты порога поломки для оружия и брони, полное восстановление одной проверкой, штрафы сломанной брони, гашение рун при поломке, видимость каждого элемента интерфейса для игроков.
+Separately configurable: the wear damage formula, the cost of a strike with a broken weapon, the fatigue divisors and broken-threshold percentages for weapons and armour, full restoration on one check, broken armour penalties, rune suppression when broken, and the visibility of each interface element to players.
 
-Полная таблица — в [документе правил](docs/iznos-snaryazheniya.md), §9.
+The full table is in the [rules document](docs/iznos-snaryazheniya.md), §9.
 
 ---
 
-## Разработка
+## Development
 
 ```bash
 node --test "test/*.test.mjs"
 ```
 
-101 тест. Правила вынесены в чистые функции без зависимости от Foundry и проверяются **против документа**, а не против кода: каждая таблица из `docs/iznos-snaryazheniya.md` имеет свой assert, и расхождение между правилами и реализацией падает тестом.
+120 tests. The rules are kept as pure functions with no dependency on Foundry and are checked **against the document** rather than against the code: every table in `docs/iznos-snaryazheniya.md` has its own assert, and a divergence between the rules and the implementation fails a test.
 
-Разбор сообщений PF2e — пути к кубу, к цели атаки, к надетой броне — тестами не покрыт, для него нужен живой мир. Он собран в тонком слое внутри `src/hooks/`, чтобы правка при обновлении системы была в одном месте.
+Balance changes have their own instrument:
 
----
+```bash
+node test/balance-tables.mjs 20
+```
 
-## Лицензия
+Three Monte Carlo tables over 100 000 item lifetimes per cell, which is how the repair ladder's `k` values and DC schedule were chosen. It reads the ladder straight out of the code, so it always describes what the module actually does. It is not a unit test and `node --test` does not pick it up.
 
-**Не определена, и это временно.**
-
-Оригинальный модуль [PF2e Aztec's Sundered](https://github.com/Tebesski/pf2e-aztecs-sundered) опубликован без файла лицензии. По умолчанию это означает «все права защищены», а раз данный модуль — производная работа, выбрать лицензию для него в одностороннем порядке нельзя: авторские права на исходный код принадлежат не мне.
-
-Что из этого следует:
-
-- форк существует в рамках правил GitHub, которые форки прямо разрешают;
-- использовать у себя за столом можно;
-- **публиковать в реестре модулей Foundry — нельзя**, пока вопрос не решён.
-
-Решается он одним письмом автору с просьбой добавить лицензию в оригинальный репозиторий; для модулей Foundry стандартом де-факто является MIT. Как только она появится, здесь будет `LICENSE` с копирайтом Aztec на исходную работу и моим — на изменения.
-
-Если вы читаете это и вам нужен модуль в другом качестве, чем «поставить себе» — напишите, ускорим.
+Parsing PF2e's messages — the paths to the die, to the attack's target, to the worn armour — is not covered by tests; it needs a live world. It is collected in a thin layer inside `src/hooks/` so that a fix after a system update lands in one place.
 
 ---
 
-## Благодарности
+## Licence
 
-[Aztec](https://github.com/Tebesski) — автор оригинального модуля, на котором всё это построено.
+**Undetermined, and that is temporary.**
 
-[AlphaStarguide](https://github.com/AlphaStarguide) — китайская локализация.
+The original module [PF2e Aztec's Sundered](https://github.com/Tebesski/pf2e-aztecs-sundered) is published without a licence file. By default that means "all rights reserved", and since this module is a derivative work, a licence cannot be chosen for it unilaterally: the copyright in the original source is not mine.
+
+What follows from that:
+
+- the fork exists within GitHub's terms, which explicitly permit forking;
+- using it at your own table is fine;
+- **publishing it in the Foundry module registry is not**, until the question is settled.
+
+It is settled by a single email to the author asking them to add a licence to the original repository; the de facto standard for Foundry modules is MIT. As soon as one exists, there will be a `LICENSE` here with Aztec's copyright on the original work and mine on the changes.
+
+If you are reading this and need the module for something other than "install it myself" — get in touch and we will speed this up.
+
+---
+
+## Credits
+
+[Aztec](https://github.com/Tebesski) — author of the original module all of this is built on.
+
+[AlphaStarguide](https://github.com/AlphaStarguide) — Chinese localisation.

@@ -61,11 +61,14 @@ const modules = [
    "../src/apps/npc-app.mjs",
    "../src/apps/persistent-app.mjs",
    "../src/apps/repair-app.mjs",
+   "../src/apps/repair-forecast.mjs",
    "../src/apps/sunder-app.mjs",
    "../src/hooks/chat-hooks.mjs",
    "../src/hooks/combat-hooks.mjs",
    "../src/hooks/item-hooks.mjs",
+   "../src/hooks/repair-hooks.mjs",
    "../src/hooks/sheet-hooks.mjs",
+   "../src/hooks/wear-hooks.mjs",
    "../src/main.mjs",
 ]
 

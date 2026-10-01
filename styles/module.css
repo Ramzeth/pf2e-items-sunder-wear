@@ -32,3 +32,131 @@
    color: var(--color-text-red, #d9534f);
    text-shadow: 0 0 1px var(--color-text-red, #d9534f) !important; /* Standard PF2e red glow */
 }
+
+/* ------------------------------------------------------------------ *
+ * The repair forecast
+ *
+ * Drawn under the grade dropdown in both repair windows. The table is the
+ * arithmetic; the bar underneath is the part people actually read.
+ * ------------------------------------------------------------------ */
+
+.aztec-repair-forecast {
+   font-size: 0.9em;
+}
+
+.aztec-forecast-dc {
+   text-align: center;
+   font-weight: bold;
+   margin-bottom: 4px;
+}
+
+.aztec-forecast-warning {
+   text-align: center;
+   color: var(--color-text-red, #d9534f);
+   margin-bottom: 4px;
+}
+
+.aztec-forecast-table {
+   width: 100%;
+   border-collapse: collapse;
+}
+
+.aztec-forecast-table th,
+.aztec-forecast-table td {
+   padding: 1px 4px;
+   text-align: right;
+   font-weight: normal;
+}
+
+.aztec-forecast-table tbody th {
+   text-align: left;
+}
+
+.aztec-forecast-table tbody th em {
+   opacity: 0.7;
+}
+
+.aztec-forecast-table thead th {
+   font-size: 0.85em;
+   opacity: 0.7;
+}
+
+.aztec-forecast-criticalSuccess td {
+   color: #2e7d32;
+}
+
+.aztec-forecast-criticalFailure td {
+   color: var(--color-text-red, #d9534f);
+}
+
+/* ------------------------------------------------------------------ *
+ * The limit bar
+ *
+ * The whole track is the item's base — what it left the forge with, and a
+ * width that never moves. Everything else is a fraction of it, stacked
+ * front to back so each band reads against the one behind it:
+ *
+ *   track   base            the item when it was new
+ *   limit   repair limit    what field repair can still reach
+ *   after   projected       where this repair would leave that limit
+ *   hp      current HP      where the item is right now
+ *   bt      broken          a tick, not a band
+ *
+ * The gap between the accent band and the end of the track is the point of
+ * the whole picture: that is what the item has already spent for good.
+ * ------------------------------------------------------------------ */
+
+.aztec-limit-bar {
+   margin-top: 6px;
+}
+
+.aztec-limit-bar-track {
+   position: relative;
+   height: 14px;
+   border: 1px solid var(--color-border-dark, #7a7971);
+   border-radius: 3px;
+   background: rgba(0, 0, 0, 0.12);
+   overflow: hidden;
+}
+
+.aztec-limit-bar-track > div {
+   position: absolute;
+   top: 0;
+   bottom: 0;
+   left: 0;
+}
+
+.aztec-limit-bar-limit {
+   background: rgba(120, 120, 120, 0.45);
+}
+
+.aztec-limit-bar-after {
+   background: rgba(191, 140, 60, 0.75);
+}
+
+.aztec-limit-bar-hp {
+   background: rgba(46, 125, 50, 0.85);
+}
+
+/* A tick rather than a band: the threshold is a line you cross, not a
+ * quantity you hold. */
+.aztec-limit-bar-bt {
+   width: 2px;
+   background: var(--color-text-red, #d9534f);
+}
+
+.aztec-limit-bar-legend {
+   display: flex;
+   justify-content: space-between;
+   font-size: 0.8em;
+   margin-top: 2px;
+   opacity: 0.85;
+}
+
+.aztec-limit-bar-legend .aztec-key-hp {
+   color: #2e7d32;
+}
+
+.aztec-limit-bar-legend .aztec-key-after {
+   color: #9a6b20;
+}

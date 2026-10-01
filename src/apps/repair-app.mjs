@@ -1,7 +1,20 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api
 import { getDefaultDurability } from "../logic.mjs"
 import { getRepairLimit, getWearBase, getWearProfile } from "../wear.mjs"
-import { getDegreeOfSuccess, getHealingValues } from "../repair.mjs"
+import {
+   applyRepair,
+   getDegreeOfSuccess,
+   getHealBudget,
+   getHealingValues,
+   getSelectableTiers,
+   REPAIR_TIERS,
+   ROUGH_TIER,
+} from "../repair.mjs"
+import {
+   forecastHtml,
+   repairAppliedLines,
+   tierOptionsHtml,
+} from "./repair-forecast.mjs"
 
 export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
    constructor(options = {}) {
@@ -113,12 +126,15 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
             ]
       }
 
-      this.itemBaseHardness = isShieldItem
-         ? (this.item.system.hardness ?? 0)
-         : (this.item.getFlag("world", "hardness") ??
-           this.materialDefaults.hardness)
       this.currentHitPoints = currentHitPoints
       this.repairLimit = repairLimit
+
+      /* The forecast needs the item's fatigue profile and its untouched base:
+       * the profile to price a grade, the base to draw the bar against
+       * something that never moves. An item outside the wear system has no
+       * profile, and the forecast degrades to a plain DC line. */
+      this.wearProfile = getWearProfile(this.item)
+      this.wearBase = getWearBase(this.item) ?? this.materialDefaults.maxHp
 
       let { baseHeal, critHeal } = this._getHealingValues(baseCraftingRank)
 
@@ -140,16 +156,42 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
    }
 
+   /**
+    * Keep the window honest as the three inputs move.
+    *
+    * Proficiency, grade and DC all feed the same forecast, so there is one
+    * redraw rather than three listeners each patching their own corner. The
+    * grade list is rebuilt only when proficiency changes, because rebuilding
+    * a dropdown out from under somebody who is using it is rude — and because
+    * dropping a rank can invalidate the grade they had chosen, which is the
+    * one case where the list has to move.
+    */
    _onRender(context, options) {
       super._onRender(context, options)
       const el = this.element
 
       const rankSelect = el.querySelector("#repair-rank")
+      const tierSelect = el.querySelector("#repair-tier")
+      const dcInput = el.querySelector("#repair-dc")
       const infoSpan = el.querySelector("#repair-restores-info")
+      const forecast = el.querySelector("#repair-forecast")
 
-      rankSelect.addEventListener("change", () => {
-         let selectedRank = parseInt(rankSelect.value) || 0
-         let { baseHeal, critHeal } = this._getHealingValues(selectedRank)
+      const refresh = (rebuildTiers = false) => {
+         const rank = parseInt(rankSelect.value) || 0
+         const { baseHeal, critHeal } = this._getHealingValues(rank)
+
+         if (rebuildTiers) {
+            /* Hold on to the chosen grade where the new proficiency still
+             * allows it, and slide down to the finest they can manage where
+             * it does not. */
+            const wanted = parseInt(tierSelect.value) || ROUGH_TIER
+            const highest = getSelectableTiers(rank).at(-1).index
+            tierSelect.innerHTML = tierOptionsHtml(
+               this.wearProfile,
+               rank,
+               Math.min(wanted, highest),
+            )
+         }
 
          let updatedInfo = game.i18n.format(
             "pf2e-items-sunder-wear.dialog.repair.restores-info",
@@ -158,7 +200,28 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
          if (updatedInfo.includes("dialog.repair.restores-info"))
             updatedInfo = `(Default success restores ${baseHeal} HP. Crit restores ${critHeal} HP)`
          infoSpan.textContent = updatedInfo
-      })
+
+         forecast.innerHTML = forecastHtml({
+            profile: this.wearProfile,
+            base: this.wearBase,
+            repairLimit: this.repairLimit,
+            currentHp: this.currentHitPoints,
+            baseDc: parseInt(dcInput.value) || 15,
+            tierIndex: parseInt(tierSelect.value) || ROUGH_TIER,
+            baseHeal,
+            critHeal,
+            fullRepair: game.settings.get(
+               "pf2e-items-sunder-wear",
+               "wearFullRepair",
+            ),
+         })
+      }
+
+      rankSelect.addEventListener("change", () => refresh(true))
+      tierSelect.addEventListener("change", () => refresh())
+      dcInput.addEventListener("input", () => refresh())
+
+      refresh(true)
    }
 
    /**
@@ -226,6 +289,12 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
                   currentHp: this.currentHitPoints,
                   repairLimit: this.repairLimit,
                   base,
+                  /* The two numbers that price a repair. They travel because
+                   * the repairer cannot read the item — that is the whole
+                   * point of the exchange — and without them their window
+                   * could not tell them what a grade would cost. */
+                  mod: profile?.mod ?? 0,
+                  bt: profile?.bt ?? 0,
                },
             },
          },
@@ -234,67 +303,70 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this.close()
    }
 
+   /**
+    * Repair the item with its own owner's Crafting.
+    *
+    * This used to be a system of its own: it healed a flat number of hit
+    * points, never touched the repair limit, and rolled 2d6 against Hardness
+    * on a critical failure. An item mended here therefore aged differently
+    * from the same item mended through a chat request — the wear system simply
+    * did not apply to work you did on your own gear, which is the opposite of
+    * what anyone would assume.
+    *
+    * It now ends in applyRepair() like every other path, so the rules are the
+    * rules whoever holds the file.
+    */
    static async _onRepair(event, target) {
       const el = this.element
-      let finalDifficultyClass =
-         parseInt(el.querySelector("#repair-dc").value) || 15
-      let selectedRank = parseInt(el.querySelector("#repair-rank").value) || 0
+      const baseDc = parseInt(el.querySelector("#repair-dc").value) || 15
+      const rank = parseInt(el.querySelector("#repair-rank").value) || 0
+      const tierIndex =
+         parseInt(el.querySelector("#repair-tier").value) || ROUGH_TIER
+      const dc = baseDc + (REPAIR_TIERS[tierIndex]?.dc ?? 0)
 
-      let { baseHeal, critHeal } = this._getHealingValues(selectedRank)
+      /* First time anything writes durability to this item, give it the
+       * numbers its material says it should have. This used to store a
+       * hardcoded hardness of 5 and whatever maximum the window happened to be
+       * showing, which quietly turned every repaired-but-untracked item into
+       * the same generic object. */
+      if (
+         this.item.type !== "shield" &&
+         this.item.getFlag("world", "maxHp") === undefined
+      )
+         await this.item.update({
+            "flags.world.maxHp": this.materialDefaults.maxHp,
+            "flags.world.hardness": this.materialDefaults.hardness,
+         })
 
       this.actor.skills.crafting.roll({
-         dc: { value: finalDifficultyClass },
+         dc: { value: dc },
          event: event,
          callback: async (rollResult, outcomeType) => {
             outcomeType ??= getDegreeOfSuccess(
                rollResult.total,
-               finalDifficultyClass,
-               rollResult.terms?.[0]?.results?.[0]?.result ?? null,
+               dc,
+               rollResult.dice?.[0]?.results?.find((r) => r.active)?.result ??
+                  null,
             )
 
-            let amountHealed = 0
-            if (outcomeType === "criticalSuccess") amountHealed = critHeal
-            else if (outcomeType === "success") amountHealed = baseHeal
-            else if (outcomeType === "criticalFailure") {
-               let critFailRoll = await new Roll("2d6").evaluate()
-               let damage = Math.max(
-                  0,
-                  critFailRoll.total - this.itemBaseHardness,
-               )
-               amountHealed = -damage
-            }
+            /* The fraction of a limit loss is a chance, not a rounding, and it
+             * is rolled through Foundry rather than Math.random so a table
+             * that wants to watch it can. */
+            const percentRoll = (await new Roll("1d100").evaluate()).total
 
-            let newlyCalculatedHitPoints =
-               amountHealed > 0
-                  ? Math.min(
-                       this.repairLimit,
-                       this.currentHitPoints + amountHealed,
-                    )
-                  : Math.max(0, this.currentHitPoints + amountHealed)
+            const applied = await applyRepair(this.item, {
+               healBudget: getHealBudget(
+                  outcomeType,
+                  rank,
+                  this.hasCraftersEyepiece,
+               ),
+               outcome: outcomeType,
+               percentRoll,
+               tierIndex,
+            })
+            if (!applied) return this.close()
 
-            let isShieldItem = this.item.type === "shield"
-            let targetItemUpdates = {}
-
-            if (isShieldItem)
-               targetItemUpdates["system.hp.value"] = newlyCalculatedHitPoints
-            else {
-               targetItemUpdates["flags.world.currentHp"] =
-                  newlyCalculatedHitPoints
-               /* First time anything writes durability to this item: give it
-                * the numbers its material says it should have. This used to
-                * store a hardcoded hardness of 5 and whatever maximum the
-                * window happened to be showing, which quietly turned every
-                * repaired-but-untracked item into the same generic object. */
-               if (this.item.getFlag("world", "maxHp") === undefined) {
-                  targetItemUpdates["flags.world.maxHp"] =
-                     this.materialDefaults.maxHp
-                  targetItemUpdates["flags.world.hardness"] =
-                     this.materialDefaults.hardness
-               }
-            }
-            await this.item.update(targetItemUpdates)
-
-            let outcomeColor =
+            const outcomeColor =
                outcomeType === "criticalSuccess"
                   ? "green"
                   : outcomeType === "success"
@@ -302,65 +374,24 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
                     : outcomeType === "criticalFailure"
                       ? "red"
                       : "gray"
-            let outcomeTextMap = {
-               criticalSuccess:
-                  game.i18n.localize(
-                     "pf2e-items-sunder-wear.outcomes.critical-success",
-                  ) || "Critical Success",
-               success:
-                  game.i18n.localize("pf2e-items-sunder-wear.outcomes.success") ||
-                  "Success",
-               failure:
-                  game.i18n.localize("pf2e-items-sunder-wear.outcomes.failure") ||
-                  "Failure",
-               criticalFailure:
-                  game.i18n.localize(
-                     "pf2e-items-sunder-wear.outcomes.critical-failure",
-                  ) || "Critical Failure",
-            }
-            let rolledFallback =
-               game.i18n.localize("pf2e-items-sunder-wear.outcomes.rolled") ||
-               "Rolled"
 
-            let titleBase = game.i18n.format(
-               "pf2e-items-sunder-wear.chat.repair.header",
-               { itemName: this.item.name },
+            const outcomeName = game.i18n.localize(
+               `pf2e-items-sunder-wear.outcomes.${outcomeType
+                  .replace(/([A-Z])/g, "-$1")
+                  .toLowerCase()}`,
             )
-            if (titleBase.includes("chat.repair.header"))
-               titleBase = `Repairing ${this.item.name}`
 
-            let amountText =
-               amountHealed !== 0
-                  ? game.i18n.format(
-                       amountHealed > 0
-                          ? "pf2e-items-sunder-wear.chat.repair.healed"
-                          : "pf2e-items-sunder-wear.chat.repair.damaged",
-                       {
-                          amount: Math.abs(
-                             newlyCalculatedHitPoints - this.currentHitPoints,
-                          ),
-                       },
-                    )
-                  : game.i18n.localize(
-                       "pf2e-items-sunder-wear.chat.repair.no-hp-restored",
-                    ) || "No HP restored"
-
-            if (amountText.includes("chat.repair")) {
-               amountText =
-                  amountHealed > 0
-                     ? `Restored ${Math.abs(newlyCalculatedHitPoints - this.currentHitPoints)} HP`
-                     : `Damaged ${Math.abs(newlyCalculatedHitPoints - this.currentHitPoints)} HP`
-            }
-
-            let currentHpLabel =
-               game.i18n.localize(
-                  "pf2e-items-sunder-wear.chat.repair.current-hp",
-               ) || "Current HP"
-
-            ChatMessage.create({
+            await ChatMessage.create({
                user: game.user.id,
                speaker: ChatMessage.getSpeaker({ actor: this.actor || null }),
-               content: `<div class=\"pf2e chat-card\"><header class=\"card-header flexrow\"><img src=\"${this.item.img}\" title=\"${this.item.name}\" width=\"36\" height=\"36\"/><h3>${titleBase}</h3></header><div class=\"card-content\" style=\"margin-top: 5px;\"><div style=\"color: ${outcomeColor}; font-weight: bold; font-size: 1.1em; text-align: center; margin: 4px 0;\">${outcomeTextMap[outcomeType] || rolledFallback}</div><div>${amountText}</div><div style=\"text-align: center; margin-top: 5px;\">${currentHpLabel}: <strong>${newlyCalculatedHitPoints} / ${this.repairLimit}</strong></div></div></div>`,
+               content: `<div class="pf2e chat-card"><header class="card-header flexrow"><img src="${
+                  this.item.img
+               }" title="${this.item.name}" width="36" height="36"/></header>
+                  <div class="card-content" style="margin-top: 5px;">
+                     <div style="color: ${outcomeColor}; font-weight: bold; text-align: center; margin: 4px 0;">${outcomeName}</div>
+                     ${repairAppliedLines(applied, this.item.name).join("<br>")}
+                  </div>
+               </div>`,
             })
          },
       })

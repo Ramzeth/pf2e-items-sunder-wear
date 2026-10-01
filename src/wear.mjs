@@ -89,14 +89,26 @@ export function getWearBase(item) {
  *     imposes a status penalty. A weapon therefore gets a lot of room below
  *     "broken" to stay useful; armour needs far less.
  *
- *   mod — how fast the Limit erodes: base / 40 for weapons, base / 80 for
- *     armour. The divisors are chosen so that every item on the ladder
- *     survives roughly the same number of triggers regardless of how sturdy
- *     it is — 208-225 attacks for weapons, 13.7-15.5 crits for armour. The
- *     flavour lives in the number of repairs, not in the lifespan: padded
- *     armour is stitched up eleven times, plate is straightened four times
- *     and then only a forge will do. The ladder tops out at exactly 0.50 in
- *     both systems — metal weapons (base 20 / 40) and plate (base 40 / 80).
+ *   mod — how hard the thing is to mend in the field: the share of the damage
+ *     that a field repair does NOT give back. Not a rate of decay — nothing
+ *     wears out by itself here, an item only loses Limit when somebody
+ *     repairs it. Rope is retied and is as good as new (0.20); steel wants a
+ *     forge, so a roadside patch costs half of what it mends (0.50).
+ *
+ *     base / 40 for weapons, base / 80 for armour. The divisors are chosen so
+ *     that every item on the ladder survives roughly the same number of
+ *     triggers regardless of how sturdy it is — 208-225 attacks for weapons,
+ *     13.7-15.5 crits for armour. The flavour lives in the number of repairs,
+ *     not in the lifespan: padded armour is stitched up eleven times, plate
+ *     is straightened four times and then only a forge will do.
+ *
+ *     The ladder tops out at exactly 0.50 in both systems — metal weapons
+ *     (base 20 / 40) and plate (base 40 / 80). Precious materials run past
+ *     that, and above 1.00 a repair would cost more Limit than the HP it
+ *     returns. The repair grades answer this without touching the formula:
+ *     what counts is mod × k, so a grade whose product has reached 1 simply
+ *     does nothing on that item and a finer hand is needed. See "An expensive
+ *     item needs a master" in docs/iznos-snaryazheniya.md §7.
  *
  * Excluded on purpose:
  *   - shields, which already have Shield Block attrition in RAW;

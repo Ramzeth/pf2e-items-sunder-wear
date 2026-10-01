@@ -33,13 +33,22 @@ const {
    getHealingValues,
    getDegreeOfSuccess,
    getHealBudget,
-   getLimitLossMultiplier,
    calcRepairHeal,
    calcRepairLimitLoss,
    calcRepairTime,
    resolveLimitLoss,
    applyRepair,
+   previewRepair,
+   getSelectableTiers,
+   getTierMod,
+   isTierProductive,
+   shiftTier,
+   REPAIR_TIERS,
+   ROUGH_TIER,
+   FINEST_TIER,
 } = await import("../src/repair.mjs")
+
+const { getWearProfile } = await import("../src/wear.mjs")
 
 const makeSword = (flags) => {
    const stored = { ...flags }
@@ -151,7 +160,12 @@ test("a failed repair restores nothing and moves nothing", () => {
 
 /* A critical success spends no limit, which makes it the clean way to look at
  * the healing on its own. */
-const CLEAN = { outcome: "criticalSuccess" }
+/* A repair that costs no limit at all, so the healing arithmetic below stays
+ * readable. There is exactly one way to get that now: a critical success at
+ * Flawless, because only there does the step up land on Absolute and its
+ * k of 0. A critical success anywhere lower delivers the grade above and
+ * still spends something. */
+const CLEAN = { outcome: "criticalSuccess", tierIndex: FINEST_TIER }
 
 test("applying reads the item's own state, not the card's", async () => {
    /* The card promised 15 HP back when the sword was at 8. It has taken
@@ -239,38 +253,45 @@ test("full repair does nothing for a failed check", () => {
  * Time spent
  *
  * Repair is a ten-minute exploration activity. Collapsing the re-rolls into
- * one check does not make the work instant, so the time is reconstructed
- * from how many by-the-book attempts the result would have taken.
+ * one check does not make the work instant, so the time is reconstructed from
+ * the work the result stands for — and it is linear, because rounding up to
+ * whole spans charged one restored hit point the same as ten and hid the
+ * entire appeal of the crude grades.
  * ------------------------------------------------------------------ */
 
-test("a repair within one attempt's budget costs ten minutes", () => {
+test("time is proportional to what was restored", () => {
    assert.deepEqual(calcRepairTime({ restored: 10, healPerAttempt: 10 }), {
-      rawAttempts: 1,
       minutes: 10,
    })
-   assert.deepEqual(calcRepairTime({ restored: 4, healPerAttempt: 10 }), {
-      rawAttempts: 1,
-      minutes: 10,
+   assert.deepEqual(calcRepairTime({ restored: 5, healPerAttempt: 10 }), {
+      minutes: 5,
    })
+   assert.deepEqual(
+      calcRepairTime({ restored: 1, healPerAttempt: 10 }),
+      { minutes: 1 },
+      "one point back is one minute, not a whole span",
+   )
 })
 
-test("a full repair costs the time it would have stood for", () => {
+test("a repair beyond one budget takes proportionally longer", () => {
    assert.deepEqual(calcRepairTime({ restored: 15, healPerAttempt: 10 }), {
-      rawAttempts: 2,
-      minutes: 20,
+      minutes: 15,
    })
    assert.deepEqual(calcRepairTime({ restored: 35, healPerAttempt: 10 }), {
-      rawAttempts: 4,
-      minutes: 40,
+      minutes: 35,
    })
 })
 
 /* Ten minutes of fruitless work is exactly what a failed repair is. */
-test("a failure still costs ten minutes", () => {
+test("work that returns nothing still costs ten minutes", () => {
    assert.deepEqual(calcRepairTime({ restored: 0, healPerAttempt: 0 }), {
-      rawAttempts: 1,
       minutes: 10,
    })
+   assert.deepEqual(
+      calcRepairTime({ restored: 0, healPerAttempt: 10 }),
+      { minutes: 10 },
+      "a success too crude for the item is still ten minutes at the bench",
+   )
 })
 
 test("applying a repair reports the time it took", async () => {
@@ -279,7 +300,7 @@ test("applying a repair reports the time it took", async () => {
    const result = await applyRepair(plate, { ...CLEAN, healBudget: 10 })
 
    assert.equal(result.restored, 35)
-   assert.equal(result.minutes, 40)
+   assert.equal(result.minutes, 35)
    fullRepairSetting = false
 })
 
@@ -323,17 +344,257 @@ test("the loss is the damage carried, times the material's mod", () => {
    )
 })
 
-/* §7: критуспех не тратит Предел, провал тратит по формуле,
- * критпровал — вдвое. */
-test("only a critical success spares the limit", () => {
-   assert.equal(getLimitLossMultiplier("criticalSuccess"), 0)
-   assert.equal(getLimitLossMultiplier("success"), 1)
-   assert.equal(getLimitLossMultiplier("failure"), 1, "a failure still costs")
-   assert.equal(
-      getLimitLossMultiplier("criticalFailure"),
-      1,
-      "a critical failure costs the same and adds damage instead",
+/* ------------------------------------------------------------------ *
+ * The ladder — iznos-snaryazheniya.md §7
+ *
+ * Seven grades, five of them selectable. k is geometric (×1.5 a step) and
+ * the DC schedule is +0/+2/+4/+7/+10; both were settled by simulation and a
+ * change to either is a change to the balance, not a refactor.
+ * ------------------------------------------------------------------ */
+
+test("the ladder is the one the tables were built on", () => {
+   assert.deepEqual(
+      REPAIR_TIERS.map((tier) => tier.k),
+      [1.5, 1.0, 0.66, 0.45, 0.3, 0.2, 0],
    )
+   assert.deepEqual(
+      REPAIR_TIERS.map((tier) => tier.dc),
+      [null, 0, 2, 4, 7, 10, null],
+   )
+})
+
+test("proficiency decides how finely you may work", () => {
+   assert.deepEqual(
+      getSelectableTiers(0).map((tier) => tier.key),
+      ["rough"],
+      "untrained can only bodge",
+   )
+   assert.deepEqual(
+      getSelectableTiers(2).map((tier) => tier.key),
+      ["rough", "neat", "fine"],
+   )
+   assert.deepEqual(
+      getSelectableTiers(4).map((tier) => tier.key),
+      ["rough", "neat", "fine", "jewellers", "flawless"],
+      "legendary can do anything a person may choose to do",
+   )
+})
+
+test("a selectable grade carries the index everything else speaks in", () => {
+   assert.deepEqual(
+      getSelectableTiers(4).map((tier) => tier.index),
+      [1, 2, 3, 4, 5],
+   )
+})
+
+/* §7: критуспех — ступень вверх, критпровал — ступень вниз. */
+test("a critical result moves the grade one step", () => {
+   assert.equal(shiftTier(ROUGH_TIER, "criticalSuccess"), 2)
+   assert.equal(shiftTier(ROUGH_TIER, "success"), ROUGH_TIER)
+   assert.equal(shiftTier(ROUGH_TIER, "failure"), ROUGH_TIER)
+   assert.equal(shiftTier(ROUGH_TIER, "criticalFailure"), 0)
+})
+
+test("the shift stops at the ends of the ladder", () => {
+   assert.equal(
+      shiftTier(FINEST_TIER, "criticalSuccess"),
+      6,
+      "flawless work rolled well is Absolute — the one free repair",
+   )
+   assert.equal(shiftTier(6, "criticalSuccess"), 6, "and goes no further")
+   assert.equal(shiftTier(0, "criticalFailure"), 0)
+})
+
+/* The behaviour change worth stating out loud: a critical success used to
+ * cost nothing whatever the grade. It costs nothing only from Flawless now. */
+test("a critical success is free only at the top of the ladder", async () => {
+   const bodged = makeSword({ maxHp: 20, currentHp: 10 })
+   const bodge = await applyRepair(bodged, {
+      outcome: "criticalSuccess",
+      tierIndex: ROUGH_TIER,
+      healBudget: 10,
+      percentRoll: 100,
+   })
+   assert.ok(
+      bodge.limitLost > 0,
+      "a lucky bodger still spends the item's future",
+   )
+
+   const finished = makeSword({ maxHp: 20, currentHp: 10 })
+   const finish = await applyRepair(finished, {
+      outcome: "criticalSuccess",
+      tierIndex: FINEST_TIER,
+      healBudget: 10,
+      percentRoll: 100,
+   })
+   assert.equal(finish.limitLost, 0)
+})
+
+test("the grade scales what the material already costs", () => {
+   const steel = getWearProfile(makeSword({ maxHp: 20 }))
+
+   assert.equal(steel.mod, 0.5)
+   assert.equal(getTierMod(steel, ROUGH_TIER), 0.5)
+   assert.equal(getTierMod(steel, FINEST_TIER), 0.1)
+   assert.equal(getTierMod(steel, 6), 0, "Absolute costs nothing by definition")
+})
+
+test("an item outside the wear system has no fatigue to scale", () => {
+   assert.equal(getTierMod(null, ROUGH_TIER), 0)
+})
+
+/* ------------------------------------------------------------------ *
+ * "Дорогой предмет требует мастера"
+ *
+ * A grade returns nothing once mod × k reaches 1: the new ceiling lands at
+ * or below where the item already sits. For weapons that is Base 40 for
+ * rough work — adamantine and cold iron at their best — and Base 61 for neat.
+ * ------------------------------------------------------------------ */
+
+test("rough work stops returning anything at base 40", () => {
+   const steel = getWearProfile(makeSword({ maxHp: 20 }))
+   const adamantine = getWearProfile(makeSword({ maxHp: 40 }))
+
+   assert.equal(isTierProductive(steel, ROUGH_TIER), true)
+   assert.equal(isTierProductive(adamantine, ROUGH_TIER), false)
+   assert.equal(
+      isTierProductive(adamantine, 2),
+      true,
+      "but a trained hand still can",
+   )
+})
+
+test("orichalcum takes fine work or none", () => {
+   const orichalcum = getWearProfile(makeSword({ maxHp: 64 }))
+
+   assert.equal(orichalcum.mod, 1.6)
+   assert.deepEqual(
+      [1, 2, 3, 4, 5].map((tier) => isTierProductive(orichalcum, tier)),
+      [false, false, true, true, true],
+   )
+})
+
+/* The bug this caught: repairing to the limit without checking the item's own
+ * HP filed points off a sword somebody had just spent ten minutes on. */
+test("a repair that returns nothing does not take anything either", async () => {
+   fullRepairSetting = true
+   const orichalcum = makeSword({ maxHp: 64, currentHp: 32 })
+
+   const result = await applyRepair(orichalcum, {
+      outcome: "success",
+      tierIndex: ROUGH_TIER,
+      healBudget: 10,
+      percentRoll: 100,
+   })
+
+   assert.equal(result.restored, 0)
+   assert.equal(result.hpAfter, 32, "the blade is no worse for the attempt")
+   assert.ok(result.limitAfter < 32, "though its future is spent")
+   fullRepairSetting = false
+})
+
+/* ------------------------------------------------------------------ *
+ * The forecast the repair window draws
+ * ------------------------------------------------------------------ */
+
+test("the preview adds the grade's premium to the check", () => {
+   const steel = getWearProfile(makeSword({ maxHp: 20 }))
+   const at = (tierIndex) =>
+      previewRepair({
+         profile: steel,
+         repairLimit: 20,
+         currentHp: 10,
+         baseDc: 15,
+         tierIndex,
+      }).dc
+
+   assert.deepEqual([1, 2, 3, 4, 5].map(at), [15, 17, 19, 22, 25])
+})
+
+test("the preview reports each outcome separately", () => {
+   const steel = getWearProfile(makeSword({ maxHp: 20 }))
+   const { outcomes } = previewRepair({
+      profile: steel,
+      repairLimit: 20,
+      currentHp: 10,
+      baseDc: 15,
+      tierIndex: 3,
+      baseHeal: 15,
+      critHeal: 30,
+      fullRepair: true,
+   })
+
+   // 10 points of damage carried, mod 0.5, Fine k 0.45 → 2.25
+   assert.equal(outcomes.success.limitLoss, 2.25)
+   assert.equal(outcomes.failure.limitLoss, 2.25, "a failure costs the same")
+   assert.ok(
+      outcomes.criticalSuccess.limitLoss < outcomes.success.limitLoss,
+      "a critical success delivers the grade above",
+   )
+   assert.ok(
+      outcomes.criticalFailure.limitLoss > outcomes.success.limitLoss,
+      "and a critical failure the grade below",
+   )
+   assert.equal(outcomes.criticalFailure.damage, 1)
+   assert.equal(outcomes.failure.restored, 0)
+})
+
+test("the preview keeps the fraction rather than rounding it away", () => {
+   const steel = getWearProfile(makeSword({ maxHp: 20 }))
+   const { outcomes } = previewRepair({
+      profile: steel,
+      repairLimit: 20,
+      currentHp: 5,
+      baseDc: 15,
+      tierIndex: ROUGH_TIER,
+   })
+
+   assert.equal(outcomes.success.limitLoss, 7.5)
+   assert.equal(outcomes.success.limitAfter, 12.5)
+})
+
+/* The limit may be fractional; hit points never are. Forecasting against the
+ * certain part of the limit promises only what the repair can guarantee. */
+test("the preview never promises a fraction of a hit point", () => {
+   const steel = getWearProfile(makeSword({ maxHp: 20 }))
+   const { outcomes } = previewRepair({
+      profile: steel,
+      repairLimit: 20,
+      currentHp: 10,
+      baseDc: 15,
+      tierIndex: 3,
+      baseHeal: 15,
+      critHeal: 30,
+      fullRepair: true,
+   })
+
+   // limit 20 → 17.75 on a success, so the sword is promised 17, not 17.75.
+   assert.equal(outcomes.success.limitAfter, 17.75)
+   assert.equal(outcomes.success.restored, 7)
+   for (const forecast of Object.values(outcomes))
+      assert.ok(
+         Number.isInteger(forecast.restored),
+         `${forecast.key} promised a fractional hit point`,
+      )
+})
+
+test("the preview flags a grade that cannot return anything", () => {
+   const orichalcum = getWearProfile(makeSword({ maxHp: 64 }))
+   const at = (tierIndex) =>
+      previewRepair({
+         profile: orichalcum,
+         repairLimit: 64,
+         currentHp: 32,
+         baseDc: 15,
+         tierIndex,
+         baseHeal: 10,
+         fullRepair: true,
+      })
+
+   assert.equal(at(ROUGH_TIER).productive, false)
+   assert.equal(at(ROUGH_TIER).outcomes.success.restored, 0)
+   assert.equal(at(3).productive, true)
+   assert.ok(at(3).outcomes.success.restored > 0)
 })
 
 /* "Потеря 7.5 → минус 7, плюс 50% на восьмую." */
@@ -401,28 +662,35 @@ test("full repair fills to the new limit regardless of the budget", async () => 
    fullRepairSetting = false
 })
 
-/* A critical failure is a failure plus a wear die. It used to cost the limit
- * double, which at a limit of 12 took a battered blade straight to its broken
- * threshold on one roll — too sharp, and unrecoverable. Damage can at least
- * be repaired again. */
-test("a critical failure costs the limit once and damages the item", async () => {
+/* A critical failure is a failure one grade worse, plus one point. It used to
+ * cost the limit double, which at a limit of 12 took a battered blade straight
+ * to its broken threshold on one roll — too sharp, and unrecoverable. The step
+ * down is the softer version of the same idea, and the damage can at least be
+ * repaired again where a lost limit cannot. */
+test("a critical failure drops a grade and costs one point of HP", async () => {
    const sword = makeSword({ maxHp: 20, currentHp: 8 })
 
-   // limit: (20 − 8) × 0.5 = 6 exactly, so 20 → 14. Then 4 damage.
+   /* 12 points of damage carried, mod 0.5. Rough would cost 6; a critical
+    * failure delivers Abysmal instead, k 1.5, so 12 × 0.75 = 9 → 20 becomes
+    * 11. Then the flat point off the blade. */
    const result = await applyRepair(sword, {
       outcome: "criticalFailure",
+      tierIndex: ROUGH_TIER,
       healBudget: 0,
-      critFailRoll: 4,
       percentRoll: 100,
    })
 
-   assert.equal(result.limitAfter, 14, "the same loss a plain failure costs")
-   assert.equal(result.critDamage, 4)
-   assert.equal(result.hpAfter, 4, "8 − 4")
+   assert.equal(result.deliveredTier, 0, "botched work is Abysmal work")
+   assert.equal(result.limitAfter, 11, "half again what a plain failure costs")
+   assert.equal(result.critDamage, 1)
+   assert.equal(result.hpAfter, 7, "8 − 1")
    assert.equal(result.restored, 0)
 })
 
-test("a rune blunts the damage from a botched repair", async () => {
+/* The one place in the system where a rune buys nothing. Subtracting Hardness
+ * from a single point would leave zero, and a runed item would be immune to
+ * spoiled work — a rule that does nothing is worse than no rule. */
+test("a rune does not blunt the damage from a botched repair", async () => {
    const runed = makeSword({
       maxHp: 20,
       currentHp: 8,
@@ -432,26 +700,41 @@ test("a rune blunts the damage from a botched repair", async () => {
    const result = await applyRepair(runed, {
       outcome: "criticalFailure",
       healBudget: 0,
-      critFailRoll: 3,
       percentRoll: 100,
    })
 
-   assert.equal(result.critDamage, 1, "3 − 2 from the potency rune")
+   assert.equal(result.critDamage, 1, "the rune is not consulted here")
 })
 
-/* Material Hardness is ignored here as it is everywhere in this system: a d4
- * against steel's Hardness 9 would never do anything at all. */
+/* Material Hardness is ignored here as it is everywhere in this system: steel's
+ * Hardness 9 against one point would never do anything at all. */
 test("material hardness does not stop a botched repair", async () => {
    const sword = makeSword({ maxHp: 20, currentHp: 8, hardness: 9 })
 
    const result = await applyRepair(sword, {
       outcome: "criticalFailure",
       healBudget: 0,
-      critFailRoll: 4,
       percentRoll: 100,
    })
 
-   assert.equal(result.critDamage, 4)
+   assert.equal(result.critDamage, 1)
+})
+
+/* A whip has 8 HP at base, and the flat point was chosen so that light gear
+ * survives the bench. It can still die there — but only from the last point,
+ * never from a full one as the d4 could. */
+test("a botched repair can finish an item that is already on 1 HP", async () => {
+   const whip = makeSword({ maxHp: 8, repairLimit: 4, currentHp: 1 })
+
+   const result = await applyRepair(whip, {
+      outcome: "criticalFailure",
+      healBudget: 0,
+      percentRoll: 100,
+   })
+
+   assert.equal(result.critDamage, 1)
+   assert.equal(result.hpAfter, 0)
+   assert.equal(result.destroyed, true)
 })
 
 test("the limit never erodes below the broken threshold", async () => {
@@ -466,14 +749,16 @@ test("the limit never erodes below the broken threshold", async () => {
    assert.equal(result.limitAfter, 5, "the threshold of 5 is the floor")
 })
 
-test("a critical success leaves the limit untouched", async () => {
+test("flawless work rolled critically leaves the limit untouched", async () => {
    const sword = makeSword({ maxHp: 20, currentHp: 4 })
    const result = await applyRepair(sword, {
       outcome: "criticalSuccess",
+      tierIndex: FINEST_TIER,
       healBudget: 10,
       percentRoll: 1,
    })
 
+   assert.equal(result.deliveredTier, 6, "Absolute, and its k of zero")
    assert.equal(result.limitLost, 0)
    assert.equal(result.limitAfter, 20)
 })

@@ -250,7 +250,21 @@
             "roll": "Roll",
             "roll-crafting": "Roll Crafting",
             "request": "Request repair",
-            "request-hint": "Announce this item in chat so another character can repair it with their own Crafting."
+            "request-hint": "Announce this item in chat so another character can repair it with their own Crafting.",
+            "who-repairs": "Who is repairing this?",
+            "grade": "Repair grade",
+            "final-dc": "Check: DC {dc}",
+            "col-limit": "Repair limit",
+            "col-hp": "Item HP",
+            "limit-kept": "unchanged",
+            "hp-damage": "−{value}",
+            "tier-dead": "Too crude for this item: a repair at this grade restores nothing and still spends the limit. This item needs a finer hand.",
+            "tier-dead-short": "restores nothing",
+            "bar-label": "Repair limit against the item's base",
+            "bar-hp": "HP {value}",
+            "bar-after": "limit after {value}",
+            "bar-limit": "limit {value}",
+            "bar-base": "base {value}"
          }
       },
       "sheet-text": {
@@ -282,6 +296,15 @@
          "master": "Master",
          "legendary": "Legendary"
       },
+      "tiers": {
+         "abysmal": "Abysmal",
+         "rough": "Rough",
+         "neat": "Neat",
+         "fine": "Fine",
+         "jewellers": "Jeweller's",
+         "flawless": "Flawless",
+         "absolute": "Absolute"
+      },
       "outcomes": {
          "critical-success": "Critical success",
          "success": "Success",
@@ -305,16 +328,19 @@
          },
          "repair-result": {
             "header": "{actorName} repairs: {itemName}",
-            "outcome-criticalSuccess": "Critical success — restores up to {healBudget} HP, and costs the item nothing.",
+            "grade": "{grade} work · DC {dc}",
+            "outcome-criticalSuccess": "Critical success — restores up to {healBudget} HP, one grade finer than attempted.",
             "outcome-success": "Success — restores up to {healBudget} HP.",
-            "outcome-criticalSuccess-full": "Critical success — restores the item to its repair limit, and costs it nothing.",
+            "outcome-criticalSuccess-full": "Critical success — restores the item to its repair limit, one grade finer than attempted.",
             "outcome-success-full": "Success — restores the item to its repair limit.",
             "outcome-failure": "Failure — nothing restored, and the repair limit still pays.",
-            "outcome-criticalFailure": "Critical failure — nothing restored, the repair limit still pays, and the item takes a wear die on top.",
+            "outcome-criticalFailure": "Critical failure — nothing restored, the work comes out a grade worse, and the item loses a point on top.",
             "apply-button": "Apply repair"
          },
          "repair-applied": {
             "header": "Repaired: {itemName}",
+            "grade": "Grade: {grade}",
+            "grade-shifted": "Grade: {attempted} → {delivered}",
             "limit-lost": "Repair limit: {limitBefore} → {limitAfter} (−{limitLost})",
             "limit-kept": "Repair limit: {limitAfter} — unchanged",
             "crit-damage": "Botched: −{critDamage} HP to the item",

@@ -17,6 +17,11 @@
     </div>
     
     <div class="form-group">
+        <label>{{localize "pf2e-items-sunder-wear.dialog.repair.grade"}}</label>
+        <select id="repair-tier" style="width: 100%;"></select>
+    </div>
+
+    <div class="form-group">
         <label>{{localize "pf2e-items-sunder-wear.dialog.repair.repair-dc"}}</label>
         <input type="number" id="repair-dc" value="{{dc}}">
     </div>
@@ -24,6 +29,8 @@
     <div style="text-align: center; font-size: 0.9em; color: var(--color-text-dark-secondary);">
         <span id="repair-restores-info">{{restoresInfo}}</span>
     </div>
+
+    <div id="repair-forecast"></div>
 
     <div style="display: flex; justify-content: center; gap: 6px; margin-top: 8px;">
         <button type="button" data-action="repair" style="flex: 1;"><i class="fa-solid fa-dice-d20"></i> {{localize "pf2e-items-sunder-wear.dialog.repair.roll-crafting"}}</button>
