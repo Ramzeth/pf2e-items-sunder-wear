@@ -22,6 +22,7 @@
 
 import {
    applyRepair,
+   clampTierToRank,
    getDegreeOfSuccess,
    getHealBudget,
    getHealingValues,
@@ -371,7 +372,7 @@ async function onRepairButton(event) {
       return
    }
 
-   const { repairer, tierIndex } = chosen
+   const { repairer } = chosen
 
    if (!hasRepairKit(repairer)) {
       button.disabled = false
@@ -394,6 +395,8 @@ async function onRepairButton(event) {
 
    const rank = crafting.rank ?? 0
    const eyepiece = hasCraftersEyepiece(repairer)
+
+   const tierIndex = clampTierToRank(chosen.tierIndex, rank)
 
    /* The published DC is for rough work. Finer work is the same job done more
     * carefully, and the premium for that is what makes the grade a choice

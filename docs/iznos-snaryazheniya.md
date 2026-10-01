@@ -207,6 +207,10 @@ effective mod = (Base / divisor) × k
 
 The two outer grades cannot be chosen: a critical failure drops you to Abysmal, a critical success lifts you to Absolute. The `k` of 0 at the top is what makes it the one free repair in the system.
 
+**Proficiency is read from the sheet, never chosen.** In the owner's own window the repairer is whoever holds the item; in the chat window it is the character picked to do the work. Either way their Crafting rank decides which grades are on offer, and the grade is clamped to that rank again just before the roll — a list on a screen can be stale or edited, a sheet is the rule.
+
+**The DC is the item's, set by its level.** A player sees it as plain text; only the GM gets a field to override it. The value is recomputed from the item at the roll and when a request is published, rather than read off the page.
+
 **`k` is geometric — ×1.5 between neighbours, and that is not decoration.** What decides whether a grade is worth buying is the **ratio** to the one above it, not the difference. An evenly spaced 1.0 / 0.8 / 0.6 / 0.4 / 0.2 gets cheaper with every step (×1.25, ×1.33, ×1.5, ×2.0) while each step costs the same DC — the top grade becomes the only sane purchase and the middle of the ladder dies. Over 100 000 item lifetimes per cell, Jeweller's on that ladder was optimal at **no deficit at all**.
 
 **The DC schedule was found the same way.** A grade lives on the gap to the **next one up**, not the gap below it: making Fine dearer to enter (+5) kills it, making its exit dearer (+7 for Jeweller's) gives it the widest band on the ladder. At `+0/+2/+4/+7/+10` every grade is optimal on at least three deficits for both a Base 20 weapon and a Base 8 one, and the reference point — a repairer facing a DC ten above their modifier — lands on Fine.

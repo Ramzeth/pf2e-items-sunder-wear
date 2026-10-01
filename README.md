@@ -92,7 +92,7 @@ The full table is in the [rules document](docs/iznos-snaryazheniya.md), §9.
 node --test "test/*.test.mjs"
 ```
 
-120 tests. The rules are kept as pure functions with no dependency on Foundry and are checked **against the document** rather than against the code: every table in `docs/iznos-snaryazheniya.md` has its own assert, and a divergence between the rules and the implementation fails a test.
+123 tests. The rules are kept as pure functions with no dependency on Foundry and are checked **against the document** rather than against the code: every table in `docs/iznos-snaryazheniya.md` has its own assert, and a divergence between the rules and the implementation fails a test.
 
 Balance changes have their own instrument:
 

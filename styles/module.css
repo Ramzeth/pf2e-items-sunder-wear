@@ -130,8 +130,11 @@
    background: rgba(120, 120, 120, 0.45);
 }
 
+/* The hit points the repair gives back: the same green as the item's own HP,
+ * only lighter — more of the same, on its way. It used to be amber, which
+ * read as a warning on the one part of the picture that is good news. */
 .aztec-limit-bar-after {
-   background: rgba(191, 140, 60, 0.75);
+   background: rgba(129, 199, 132, 0.85);
 }
 
 .aztec-limit-bar-hp {
@@ -145,18 +148,52 @@
    background: var(--color-text-red, #d9534f);
 }
 
+/* A swatch and a number per band. Wraps rather than squeezing: the window is
+ * 400px and five entries do not fit on one line in every language. */
 .aztec-limit-bar-legend {
    display: flex;
-   justify-content: space-between;
+   flex-wrap: wrap;
+   gap: 2px 12px;
    font-size: 0.8em;
-   margin-top: 2px;
-   opacity: 0.85;
+   margin-top: 4px;
 }
 
-.aztec-limit-bar-legend .aztec-key-hp {
-   color: #2e7d32;
+.aztec-limit-key {
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   white-space: nowrap;
 }
 
-.aztec-limit-bar-legend .aztec-key-after {
-   color: #9a6b20;
+/* Each swatch repeats its band's fill exactly, so the legend can never drift
+ * from the bar it explains. */
+.aztec-swatch {
+   display: inline-block;
+   width: 10px;
+   height: 10px;
+   border-radius: 2px;
+}
+
+.aztec-swatch-hp {
+   background: rgba(46, 125, 50, 0.85);
+}
+
+.aztec-swatch-restored {
+   background: rgba(129, 199, 132, 0.85);
+}
+
+.aztec-swatch-lost {
+   background: rgba(120, 120, 120, 0.45);
+}
+
+.aztec-swatch-base {
+   background: rgba(0, 0, 0, 0.12);
+   border: 1px solid var(--color-border-dark, #7a7971);
+}
+
+/* The threshold is a line on the bar, so its swatch is a line too. */
+.aztec-swatch-bt {
+   width: 2px;
+   border-radius: 0;
+   background: var(--color-text-red, #d9534f);
 }

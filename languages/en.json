@@ -252,19 +252,21 @@
             "request": "Request repair",
             "request-hint": "Announce this item in chat so another character can repair it with their own Crafting.",
             "who-repairs": "Who is repairing this?",
+            "repairer-line": "{actorName} — {rank}",
             "grade": "Repair grade",
             "final-dc": "Check: DC {dc}",
-            "col-limit": "Repair limit",
+            "col-loss": "Limit lost",
+            "col-limit": "New limit",
             "col-hp": "Item HP",
-            "limit-kept": "unchanged",
             "hp-damage": "−{value}",
             "tier-dead": "Too crude for this item: a repair at this grade restores nothing and still spends the limit. This item needs a finer hand.",
             "tier-dead-short": "restores nothing",
             "bar-label": "Repair limit against the item's base",
-            "bar-hp": "HP {value}",
-            "bar-after": "limit after {value}",
-            "bar-limit": "limit {value}",
-            "bar-base": "base {value}"
+            "bar-hp": "HP now: {value}",
+            "bar-restored": "HP restored: {value}",
+            "bar-lost": "Repair limit lost: {value}",
+            "bar-bt": "Broken at: {value}",
+            "bar-base": "Base: {value}"
          }
       },
       "sheet-text": {

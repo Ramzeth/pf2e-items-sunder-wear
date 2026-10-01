@@ -2,6 +2,29 @@
 
 All notable changes to this module. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning follows [SemVer](https://semver.org/).
 
+## [0.2.1] — 2026-10-01
+
+### Added
+
+- **A colour legend under the repair limit bar.** Each band has a swatch and its number: HP now, HP restored, repair limit lost, the broken threshold and the Base. The red tick on the bar used to go unexplained.
+
+### Changed
+
+- **The owner's repair window reads Crafting proficiency from the sheet.** The repairer is whoever holds the item, shown as "Name — Rank"; the grade dropdown offers what that rank allows and nothing more. The window now matches the one a repairer gets when answering a request in chat, minus the character picker.
+- **Repair DC is the item's, and only the GM can change it.** Players see it as plain text; the GM keeps a field to override it. For players the DC is recomputed from the item's level at the roll and when a request is published.
+- **The forecast table has three columns:** limit lost, new limit, item HP. The loss and the limit it leaves used to share a cell ("−3.3 → 16"), and the eye landed on the arrow's end and skipped the cost.
+- **HP restored by a repair is drawn light green** instead of amber. Amber read as a warning on the one part of the bar that is good news.
+
+### Fixed
+
+- **Self-repair could be done at any grade, whatever the character's Crafting.** The owner's window offered all five proficiency ranks pre-selected to the character's own, so a player could hand themselves legendary Crafting and buy Flawless work with it.
+- **The grade and the DC were read back from the page,** where they could be edited in the browser. The grade is now clamped to the repairer's rank just before the roll in both windows, and a player's DC is recomputed from the item. A broken form falls back to rough work rather than throwing.
+
+### Removed
+
+- The Crafting proficiency dropdown in the owner's repair window.
+- The text line under the bar ("limit after · limit · base"), replaced by the legend.
+
 ## [0.2.0] — 2026-09-19
 
 ### Added

@@ -39,6 +39,7 @@ const {
    resolveLimitLoss,
    applyRepair,
    previewRepair,
+   clampTierToRank,
    getSelectableTiers,
    getTierMod,
    isTierProductive,
@@ -378,6 +379,30 @@ test("proficiency decides how finely you may work", () => {
       ["rough", "neat", "fine", "jewellers", "flawless"],
       "legendary can do anything a person may choose to do",
    )
+})
+
+/* The windows only offer what the rank allows, but the choice comes back from
+ * a page. The rank on the sheet has to win over whatever the page says. */
+test("a repairer cannot work finer than their rank allows", () => {
+   assert.equal(
+      clampTierToRank(FINEST_TIER, 0),
+      ROUGH_TIER,
+      "an untrained hand asking for Flawless gets Rough",
+   )
+   assert.equal(clampTierToRank(FINEST_TIER, 2), 3, "an expert tops out at Fine")
+   assert.equal(clampTierToRank(3, 2), 3, "and gets it when that is the ask")
+   assert.equal(clampTierToRank(FINEST_TIER, 4), FINEST_TIER)
+})
+
+test("the ends of the ladder cannot be asked for directly", () => {
+   assert.equal(clampTierToRank(0, 4), ROUGH_TIER, "nobody chooses Abysmal")
+   assert.equal(clampTierToRank(6, 4), FINEST_TIER, "nor Absolute")
+})
+
+test("a broken form falls back to rough work", () => {
+   assert.equal(clampTierToRank(NaN, 4), ROUGH_TIER)
+   assert.equal(clampTierToRank(undefined, 4), ROUGH_TIER)
+   assert.equal(clampTierToRank(2.5, 4), ROUGH_TIER)
 })
 
 test("a selectable grade carries the index everything else speaks in", () => {

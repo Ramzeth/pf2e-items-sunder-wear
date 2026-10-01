@@ -60,27 +60,47 @@ export function tierOptionsHtml(profile, rank, selected) {
       .join("")
 }
 
+/** A limit loss as a person would read it: whole where it is whole. */
+const formatLoss = (loss) =>
+   Number.isInteger(loss) ? String(loss) : loss.toFixed(2).replace(/\.?0+$/, "")
+
 /**
  * A bar of the item's base, with everything that matters marked on it.
  *
  * Reading from the back forward: the whole track is the base the item left the
- * forge with, the pale band is the repair limit it has left, the accent band
- * is where that limit would land after this repair, the solid fill is the hit
- * points it has now, and the tick is the broken threshold.
+ * forge with, the grey band is the repair limit this repair would spend, the
+ * light green band is the hit points it would give back, the solid green is
+ * what the item has now, and the tick is the broken threshold. Whatever is
+ * left of the bare track past the grey was spent by earlier repairs.
  *
- * The point of drawing it rather than printing four numbers is the gap between
- * the accent band and the end of the track: that gap is what the item has
- * already spent and will never get back in the field, and it is the one number
- * players consistently fail to notice until it is too late.
+ * The gains are green and the cost is grey on purpose. The restored band used
+ * to be amber, and amber reads as a warning — it put the alarm on the one part
+ * of the picture that is good news, while the actual cost sat in a neutral
+ * colour beside it.
  *
- * On an item too fine for the grade chosen, the fill runs past the accent
- * band. That looks wrong because it is: the repair would return nothing.
+ * The legend carries the numbers, each beside a swatch of its band, so the bar
+ * can be read without counting pixels and the numbers without a key.
+ *
+ * On an item too fine for the grade chosen, the solid green runs past the
+ * grey's start and there is no light green at all. That looks wrong because
+ * it is: the repair would return nothing.
  */
-function limitBarHtml({ base, repairLimit, limitAfter, currentHp, bt }) {
+function limitBarHtml({
+   base,
+   repairLimit,
+   limitAfter,
+   currentHp,
+   restored,
+   limitLoss,
+   bt,
+}) {
    if (!(base > 0)) return ""
 
    const percent = (value) =>
       `${Math.max(0, Math.min(100, (value / base) * 100)).toFixed(1)}%`
+
+   const key = (swatch, text) =>
+      `<span class="aztec-limit-key"><i class="aztec-swatch ${swatch}"></i>${text}</span>`
 
    return `<div class="aztec-limit-bar" role="img" aria-label="${label(
       "dialog.repair.bar-label",
@@ -92,25 +112,24 @@ function limitBarHtml({ base, repairLimit, limitAfter, currentHp, bt }) {
          <div class="aztec-limit-bar-bt" style="left:${percent(bt)}"></div>
       </div>
       <div class="aztec-limit-bar-legend">
-         <span class="aztec-key-hp">${label("dialog.repair.bar-hp", {
-            value: currentHp,
-         })}</span>
-         <span class="aztec-key-after">${label("dialog.repair.bar-after", {
-            value: Math.floor(limitAfter),
-         })}</span>
-         <span class="aztec-key-limit">${label("dialog.repair.bar-limit", {
-            value: repairLimit,
-         })}</span>
-         <span class="aztec-key-base">${label("dialog.repair.bar-base", {
-            value: base,
-         })}</span>
+         ${key("aztec-swatch-hp", label("dialog.repair.bar-hp", { value: currentHp }))}
+         ${key(
+            "aztec-swatch-restored",
+            label("dialog.repair.bar-restored", {
+               value: restored > 0 ? `+${restored}` : "0",
+            }),
+         )}
+         ${key(
+            "aztec-swatch-lost",
+            label("dialog.repair.bar-lost", {
+               value: limitLoss > 0 ? `−${formatLoss(limitLoss)}` : "0",
+            }),
+         )}
+         ${key("aztec-swatch-bt", label("dialog.repair.bar-bt", { value: bt }))}
+         ${key("aztec-swatch-base", label("dialog.repair.bar-base", { value: base }))}
       </div>
    </div>`
 }
-
-/** A limit loss as a person would read it: whole where it is whole. */
-const formatLoss = (loss) =>
-   Number.isInteger(loss) ? String(loss) : loss.toFixed(2).replace(/\.?0+$/, "")
 
 /**
  * The whole forecast: the check to beat, what each outcome does, and the bar.
@@ -150,15 +169,15 @@ export function forecastHtml({
       const forecast = preview.outcomes[outcome]
       const shifted = forecast.tierIndex !== preview.tierIndex
 
+      /* The loss and the limit it leaves get a column each. Together in one
+       * cell ("−3.3 → 16") the eye lands on the arrow's end and skips the
+       * cost — and the cost is the number this table exists to show. */
       return `<tr class="aztec-forecast-${outcome}">
          <th>${label(
             `outcomes.${outcome.replace(/([A-Z])/g, "-$1").toLowerCase()}`,
          )}${shifted ? ` <em>(${tierName(forecast.tierIndex)})</em>` : ""}</th>
-         <td>${
-            forecast.limitLoss > 0
-               ? `−${formatLoss(forecast.limitLoss)} → ${Math.floor(forecast.limitAfter)}`
-               : label("dialog.repair.limit-kept")
-         }</td>
+         <td>${forecast.limitLoss > 0 ? `−${formatLoss(forecast.limitLoss)}` : "—"}</td>
+         <td>${Math.floor(forecast.limitAfter)}</td>
          <td>${
             forecast.damage > 0
                ? label("dialog.repair.hp-damage", { value: forecast.damage })
@@ -187,6 +206,7 @@ export function forecastHtml({
       <table class="aztec-forecast-table">
          <thead><tr>
             <th></th>
+            <th>${label("dialog.repair.col-loss")}</th>
             <th>${label("dialog.repair.col-limit")}</th>
             <th>${label("dialog.repair.col-hp")}</th>
          </tr></thead>
@@ -201,6 +221,8 @@ export function forecastHtml({
          repairLimit,
          limitAfter: onSuccess.limitAfter,
          currentHp,
+         restored: onSuccess.restored,
+         limitLoss: onSuccess.limitLoss,
          bt: profile?.bt ?? 0,
       })}
    </div>`

@@ -3,10 +3,10 @@ import { getDefaultDurability } from "../logic.mjs"
 import { getRepairLimit, getWearBase, getWearProfile } from "../wear.mjs"
 import {
    applyRepair,
+   clampTierToRank,
    getDegreeOfSuccess,
    getHealBudget,
    getHealingValues,
-   getSelectableTiers,
    REPAIR_TIERS,
    ROUGH_TIER,
 } from "../repair.mjs"
@@ -42,6 +42,22 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
    _getHealingValues(rank) {
       return getHealingValues(rank, this.hasCraftersEyepiece)
+   }
+
+   /**
+    * The rough-work DC this repair is rated against.
+    *
+    * For a player it is always the one computed from the item's level, never
+    * anything read off the page: hiding the field is presentation, and a page
+    * can be edited. Only a GM's field is trusted, because overriding the DC
+    * is a GM's call to make — and an empty or broken entry falls back to the
+    * computed value rather than to some arbitrary number.
+    */
+   _readBaseDc() {
+      if (!game.user.isGM) return this.baseDc
+
+      const typed = parseInt(this.element?.querySelector("#repair-dc")?.value)
+      return Number.isInteger(typed) ? typed : this.baseDc
    }
 
    async _prepareContext(options) {
@@ -89,7 +105,13 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
          return this.close()
       }
 
-      let baseCraftingRank = this.actor.skills.crafting.rank ?? 0
+      /* The repairer is whoever is holding the item, and their Crafting is
+       * whatever their sheet says. This used to be a dropdown of all five
+       * ranks, pre-selected to the character's own — which let a player hand
+       * themselves legendary Crafting and buy Flawless work with it. Reading
+       * the rank instead of offering it is the whole point of the grade
+       * ladder: fine work is what proficiency is for. */
+      this.craftingRank = this.actor.skills.crafting.rank ?? 0
       let repairDifficultyClass = 15
 
       this.hasCraftersEyepiece = this.actor.items.some(
@@ -99,21 +121,10 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
             i.system.equipped?.invested === true,
       )
 
-      const rankNames = [
-         game.i18n.localize("pf2e-items-sunder-wear.ranks.untrained") ||
-            "Untrained",
-         game.i18n.localize("pf2e-items-sunder-wear.ranks.trained") || "Trained",
-         game.i18n.localize("pf2e-items-sunder-wear.ranks.expert") || "Expert",
-         game.i18n.localize("pf2e-items-sunder-wear.ranks.master") || "Master",
-         game.i18n.localize("pf2e-items-sunder-wear.ranks.legendary") ||
-            "Legendary",
-      ]
-
-      let ranks = rankNames.map((label, index) => ({
-         value: index,
-         label: label,
-         selected: index === baseCraftingRank,
-      }))
+      const RANK_KEYS = ["untrained", "trained", "expert", "master", "legendary"]
+      const rankName = game.i18n.localize(
+         `pf2e-items-sunder-wear.ranks.${RANK_KEYS[this.craftingRank] ?? "untrained"}`,
+      )
 
       if (this.item.system.level?.value !== undefined) {
          const standardDifficultyClasses = [
@@ -128,6 +139,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       this.currentHitPoints = currentHitPoints
       this.repairLimit = repairLimit
+      this.baseDc = repairDifficultyClass
 
       /* The forecast needs the item's fatigue profile and its untouched base:
        * the profile to price a grade, the base to draw the bar against
@@ -136,7 +148,7 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this.wearProfile = getWearProfile(this.item)
       this.wearBase = getWearBase(this.item) ?? this.materialDefaults.maxHp
 
-      let { baseHeal, critHeal } = this._getHealingValues(baseCraftingRank)
+      let { baseHeal, critHeal } = this._getHealingValues(this.craftingRank)
 
       let restoresInfo = game.i18n.format(
          "pf2e-items-sunder-wear.dialog.repair.restores-info",
@@ -148,8 +160,14 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       return {
          item: this.item,
-         ranks: ranks,
+         repairerLine: game.i18n.format(
+            "pf2e-items-sunder-wear.dialog.repair.repairer-line",
+            { actorName: this.actor.name, rank: rankName },
+         ),
          dc: repairDifficultyClass,
+         /* Only the GM gets a field. The DC is the item's, set by its level,
+          * and a player who could type their own would never fail a repair. */
+         dcEditable: game.user.isGM,
          restoresInfo: restoresInfo,
          currentHp: currentHitPoints,
          repairLimit,
@@ -157,56 +175,41 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
    }
 
    /**
-    * Keep the window honest as the three inputs move.
+    * Keep the window honest as the two inputs move.
     *
-    * Proficiency, grade and DC all feed the same forecast, so there is one
-    * redraw rather than three listeners each patching their own corner. The
-    * grade list is rebuilt only when proficiency changes, because rebuilding
-    * a dropdown out from under somebody who is using it is rude — and because
-    * dropping a rank can invalidate the grade they had chosen, which is the
-    * one case where the list has to move.
+    * Only the grade and the DC are inputs now. Proficiency used to be a third,
+    * and the grade list had to be rebuilt whenever it changed; with the rank
+    * read off the sheet the list is built once and never moves, which is also
+    * what makes this window match the one a repairer gets in chat.
+    *
+    * The DC is an input for the GM only. An item's level sets it, and a table
+    * that wants a different number should be able to say so without
+    * recomputing the grade premium by hand — but that is the GM's call. A
+    * player sees the DC as plain text, and only the grade moves for them.
     */
    _onRender(context, options) {
       super._onRender(context, options)
       const el = this.element
 
-      const rankSelect = el.querySelector("#repair-rank")
       const tierSelect = el.querySelector("#repair-tier")
       const dcInput = el.querySelector("#repair-dc")
-      const infoSpan = el.querySelector("#repair-restores-info")
       const forecast = el.querySelector("#repair-forecast")
 
-      const refresh = (rebuildTiers = false) => {
-         const rank = parseInt(rankSelect.value) || 0
-         const { baseHeal, critHeal } = this._getHealingValues(rank)
+      const { baseHeal, critHeal } = this._getHealingValues(this.craftingRank)
 
-         if (rebuildTiers) {
-            /* Hold on to the chosen grade where the new proficiency still
-             * allows it, and slide down to the finest they can manage where
-             * it does not. */
-            const wanted = parseInt(tierSelect.value) || ROUGH_TIER
-            const highest = getSelectableTiers(rank).at(-1).index
-            tierSelect.innerHTML = tierOptionsHtml(
-               this.wearProfile,
-               rank,
-               Math.min(wanted, highest),
-            )
-         }
+      tierSelect.innerHTML = tierOptionsHtml(
+         this.wearProfile,
+         this.craftingRank,
+         ROUGH_TIER,
+      )
 
-         let updatedInfo = game.i18n.format(
-            "pf2e-items-sunder-wear.dialog.repair.restores-info",
-            { baseHeal, critHeal },
-         )
-         if (updatedInfo.includes("dialog.repair.restores-info"))
-            updatedInfo = `(Default success restores ${baseHeal} HP. Crit restores ${critHeal} HP)`
-         infoSpan.textContent = updatedInfo
-
+      const refresh = () => {
          forecast.innerHTML = forecastHtml({
             profile: this.wearProfile,
             base: this.wearBase,
             repairLimit: this.repairLimit,
             currentHp: this.currentHitPoints,
-            baseDc: parseInt(dcInput.value) || 15,
+            baseDc: this._readBaseDc(),
             tierIndex: parseInt(tierSelect.value) || ROUGH_TIER,
             baseHeal,
             critHeal,
@@ -217,11 +220,11 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
          })
       }
 
-      rankSelect.addEventListener("change", () => refresh(true))
-      tierSelect.addEventListener("change", () => refresh())
-      dcInput.addEventListener("input", () => refresh())
+      tierSelect.addEventListener("change", refresh)
+      // Absent for players: they see the DC as text, not as a field.
+      dcInput?.addEventListener("input", refresh)
 
-      refresh(true)
+      refresh()
    }
 
    /**
@@ -244,8 +247,9 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
     * much disclosure as the owner chose to make.
     */
    static async _onRequestRepair(event, target) {
-      const el = this.element
-      const dc = parseInt(el.querySelector("#repair-dc")?.value) || 15
+      /* The DC published on the card is the one every repairer will roll
+       * against, so it has to be the item's, not whatever an owner typed. */
+      const dc = this._readBaseDc()
 
       const profile = getWearProfile(this.item)
       const base = getWearBase(this.item) ?? this.repairLimit
@@ -318,10 +322,13 @@ export class RepairApp extends HandlebarsApplicationMixin(ApplicationV2) {
     */
    static async _onRepair(event, target) {
       const el = this.element
-      const baseDc = parseInt(el.querySelector("#repair-dc").value) || 15
-      const rank = parseInt(el.querySelector("#repair-rank").value) || 0
-      const tierIndex =
-         parseInt(el.querySelector("#repair-tier").value) || ROUGH_TIER
+      const baseDc = this._readBaseDc()
+      const rank = this.craftingRank
+
+      const tierIndex = clampTierToRank(
+         parseInt(el.querySelector("#repair-tier").value),
+         rank,
+      )
       const dc = baseDc + (REPAIR_TIERS[tierIndex]?.dc ?? 0)
 
       /* First time anything writes durability to this item, give it the

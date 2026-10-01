@@ -9,13 +9,9 @@
 
     <div class="form-group">
         <label>{{localize "pf2e-items-sunder-wear.dialog.repair.crafting-proficiency"}}</label>
-        <select id="repair-rank" style="width: 100%;">
-            {{#each ranks}}
-            <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
-            {{/each}}
-        </select>
+        <span class="aztec-repair-repairer">{{repairerLine}}</span>
     </div>
-    
+
     <div class="form-group">
         <label>{{localize "pf2e-items-sunder-wear.dialog.repair.grade"}}</label>
         <select id="repair-tier" style="width: 100%;"></select>
@@ -23,7 +19,11 @@
 
     <div class="form-group">
         <label>{{localize "pf2e-items-sunder-wear.dialog.repair.repair-dc"}}</label>
+        {{#if dcEditable}}
         <input type="number" id="repair-dc" value="{{dc}}">
+        {{else}}
+        <span class="aztec-repair-dc">{{dc}}</span>
+        {{/if}}
     </div>
 
     <div style="text-align: center; font-size: 0.9em; color: var(--color-text-dark-secondary);">

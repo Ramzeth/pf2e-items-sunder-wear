@@ -107,6 +107,30 @@ export function getSelectableTiers(rank = 0) {
 }
 
 /**
+ * The grade a repairer may actually work at, whatever they asked for.
+ *
+ * Both repair windows only offer grades the rank allows, but the choice is
+ * read back from a page, and a page can be edited — or simply be stale, if
+ * the character's proficiency changed while the window was open. The rank on
+ * the sheet is the rule; the list on the screen is only its reflection, so
+ * this is the line every path goes through before a check is rolled.
+ *
+ * Anything that is not a whole grade index falls back to rough work rather
+ * than throwing: a broken form should cost the repairer a worse grade, not
+ * the table a stack trace.
+ *
+ * @param {number} tierIndex  what the form says.
+ * @param {number} rank       the repairer's Crafting proficiency, 0–4.
+ * @returns {number}
+ */
+export function clampTierToRank(tierIndex, rank = 0) {
+   const finest = getSelectableTiers(rank).at(-1).index
+   const asked = Number.isInteger(tierIndex) ? tierIndex : ROUGH_TIER
+
+   return Math.min(finest, Math.max(ROUGH_TIER, asked))
+}
+
+/**
  * Where an outcome moves the grade actually delivered.
  *
  * A critical success is one grade better than attempted, a critical failure
